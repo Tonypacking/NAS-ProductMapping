@@ -1,14 +1,16 @@
 import pandas as pd
 import os
-
-class ProMapDataset:
+from Dataset import Dataset
+class ProductsDatasets:
     """_summary_
     Class for easily loading and manipulating ProMap datasets.
     """
-    __default_path = "../Data/Product-Mapping-Datasets/Basic ProMap Datasets"  # Default dataset root path
+    _default_basic_path = "../Data/Product-Mapping-Datasets/Basic ProMap Datasets"  # Default basic dataset root path
+    _default_extended_path = "../Data/Product-Mapping-Datasets/Extended ProMap Datasets/ProMapsExtended/similarities" # Default extended dataset root path
+    _default_multi_path = "../Data/Product-Mapping-Datasets/Extended ProMap Datasets/ProMapsMulti/similarities"
     
     @staticmethod
-    def __Split_data(path:str, dataset_name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def __Split_data(path:str, dataset_name: str) -> Dataset:
         """_summary_
         Helper function to load and split the data into train and test data.
         Args:
@@ -16,26 +18,39 @@ class ProMapDataset:
             dataset_name (str): dataset name
 
         Returns:
-            tuple[pd.DataFrame, pd.DataFrame]: train and test set
+            Dataset: train and test set
         """
         train_suffix = f"{dataset_name}-train_data_similarities.csv"
         test_suffix = f"{dataset_name}-test_data_similarities.csv"
         test_data = pd.read_csv(os.path.join(path, test_suffix))
         train_data = pd.read_csv(os.path.join(path, train_suffix))
-        return train_data.iloc, test_data
+        return Dataset(train_data, test_data, dataset_name)
     
     @staticmethod
-    def Load_amazon_google(path: str = os.path.join(__default_path,"amazon-google")) -> tuple[pd.DataFrame, pd.DataFrame]:
-        return ProMapDataset.__Split_data(path, "amazon_google")
+    def Load_basic_amazon_google(path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "amazon_google")
     
     @staticmethod
-    def Load_amazon_walmart(path:str = os.path.join(__default_path, "amazon-walmart") ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        return ProMapDataset.__Split_data(path, "amazon_walmart")
+    def Load_basic_amazon_walmart(path:str = os.path.join(_default_basic_path, "amazon-walmart") ) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "amazon_walmart")
 
     @staticmethod
-    def Load_promap_cz(path :str =  os.path.join(__default_path,"ProMapCz")  ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        return ProMapDataset.__Split_data(path, "promapcz")
+    def Load_basic_promap_cz(path :str =  os.path.join(_default_basic_path,"ProMapCz")  ) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "promapcz")
 
     @staticmethod
-    def Load_promap_en(path:str = os.path.join(__default_path, "ProMapEn") ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        return ProMapDataset.__Split_data(path, "promapen")
+    def Load_basic_promap_en(path:str = os.path.join(_default_basic_path, "ProMapEn") ) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "promapen")
+
+    @staticmethod
+    def Load_extended_promap_cz(path: str = _default_extended_path) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "promapczext")
+
+    @staticmethod
+    def Load_extended_promap_en(path: str = _default_extended_path) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "promapenext")
+    
+    @staticmethod
+    def Load_extended_amazon_walmart(path: str = _default_extended_path) -> Dataset:
+        return ProductsDatasets.__Split_data(path, "promapmulti_amazon_ext")
+    
