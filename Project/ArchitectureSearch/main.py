@@ -4,13 +4,10 @@ import argparse
 import NeuroEvolution
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--verbose', action='store_true', help='Enable verbouse output')
-
 def main(args: argparse.Namespace):
 
-    a = ProductsDatasets.Load_basic_promap_cz()
-    
-    input()
+    a = ProductsDatasets.Load_extended_promap_cz()
+
     evolution = NeuroEvolution.Evolution("Config/ProMapCz", a)
     evolution.run()
 
