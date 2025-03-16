@@ -1,7 +1,7 @@
 import configparser
 import itertools
 
-class NeatConfig:
+class NeatConfigParser:
     @staticmethod
     def _getDefaultAttributes():
         """_summary_
@@ -87,7 +87,7 @@ class NeatConfig:
         Args:
             parser (configparser.ConfigParser): _description_
         """
-        default = NeatConfig._getDefaultAttributes()
+        default = NeatConfigParser._getDefaultAttributes()
         for (section, options), value in zip(default.keys(), default.values()):
             if not parser.has_section(section):
                 parser.add_section(section)
@@ -121,4 +121,3 @@ class NeatConfig:
 
             with open(name, 'w') as f:
                 parser.write(f)
-    
