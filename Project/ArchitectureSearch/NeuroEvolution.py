@@ -47,15 +47,18 @@ class Evolution:
 
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
+
             winner = population.run(para_eval.eval_function, iterations)
         else:
             winner = population.run(self._eval_genomes, iterations)
-        
+        # TODO
+        # get top k best individuals from the populations
+        t = [x[1].fitness for x in population.population.items()]
         self.Best_network = neat.nn.FeedForwardNetwork.create(winner, self._neat_config)
         print(f"Winner {winner}")
         return self.Best_network
     
-    def validation(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> float:
+    def validation(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
         if test_set is None and target_set is None:
             predicted = np.array([Evolution._binarize_prediction(self.Best_network.activate(x)[0]) for x in self._dataset.test_set])
             target_set = self._dataset.test_targets
@@ -63,4 +66,12 @@ class Evolution:
             assert ValueError("Invalid test set or target set")
         else:
             predicted = np.array([Evolution._binarize_prediction(self.Best_network.activate(x)[0]) for x in test_set])
-        return sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set)
+
+        return {
+            'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
+            'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
+            'precision' : sklearn.metrics.precision_score(y_pred=predicted, y_true=target_set),
+            'recall' : sklearn.metrics.recall_score(y_pred=predicted, y_true=target_set),
+            'confusion_matrix' : sklearn.metrics.confusion_matrix(y_pred=predicted, y_true=target_set),
+            'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
+        }
