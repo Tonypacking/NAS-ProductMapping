@@ -5,7 +5,10 @@ import sklearn
 import neat
 import sklearn.metrics
 from typing import Sequence, Optional
+import multiprocessing
+import sklearn.metrics._base
 from Dataset import Dataset
+
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None):
@@ -22,28 +25,32 @@ class Evolution:
         Binarize prediction to matching or None Matching
         """
         return 1 if x >= 0.5 else 0
-
+    
+    
     def _eval_genomes(self, genomes, config):
-        
         for id, genome in genomes:
-            genome.fitness = 0.0
+            genome.fitness = self._dataset.train_set.shape[0]
 
             net = neat.nn.FeedForwardNetwork.create(genome=genome, config=config)
 
             predicted = np.array([Evolution._binarize_prediction(net.activate(x)[0]) for x in self._dataset.train_set])
             genome.fitness = sklearn.metrics.f1_score(y_pred=predicted, y_true=self._dataset.train_targets) * self._fitness_scaling
 
-            
-    def run(self, iterations: int = 50) -> neat.nn.FeedForwardNetwork:
+    
+    def run(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
 
         population = neat.Population(self._neat_config)
 
         population.add_reporter(neat.StdOutReporter(show_species_detail=True))
         stats = neat.StatisticsReporter()
         population.add_reporter(stats)
- 
-        winner = population.run(self._eval_genomes, iterations)
 
+        if parralel:
+            para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
+            winner = population.run(para_eval.eval_function, iterations)
+        else:
+            winner = population.run(self._eval_genomes, iterations)
+        
         self.Best_network = neat.nn.FeedForwardNetwork.create(winner, self._neat_config)
         print(f"Winner {winner}")
         return self.Best_network
