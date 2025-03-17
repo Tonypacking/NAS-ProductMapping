@@ -10,9 +10,6 @@ class Dataset:
     Splits training and testing data to features and targets
     """
     def __init__(self, training_data: pd.DataFrame, testing_data: pd.DataFrame, name: None| str  = None):
-
-        for col in training_data.columns:
-            print(f"Unique {col} {training_data[col].unique()}")
         self.ids = ['id1', 'id2']
         self.dataset_name = name
         self.feature_labels = training_data.drop(self.ids, axis=1).iloc[:, :-1].columns
@@ -49,10 +46,12 @@ class Dataset:
             ValueError: If method is unknown dimension reduction methon
         """
         if method.lower() == 'lda':
+            
             lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
-            self.train_set = lda.fit_transform(self.train_set)
+            self.train_set = lda.fit_transform(self.train_set, self.train_targets)
             self.test_set = lda.transform(self.test_set)
         elif method.lower() == 'pca':
+
             pca = sklearn.decomposition.PCA(n_components=0.95)
             self.train_set = pca.fit_transform(self.train_set)
             self.test_set = pca.transform(self.test_set)
