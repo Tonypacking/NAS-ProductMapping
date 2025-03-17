@@ -8,13 +8,14 @@ from typing import Sequence, Optional
 import multiprocessing
 import sklearn.metrics._base
 from Dataset import Dataset
-
+import configparser
 class Evolution:
     
-    def __init__(self, config_path: str, dataset:Dataset = None):
-        self._dataset = dataset
+    def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
+        self._dataset :Dataset = dataset
         self.Name = self._dataset.dataset_name
-        self._neat_config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+        
+        self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
         self._population = neat.Population(self._neat_config)
         self.Best_network = None
         self._fitness_scaling = 1_000 
@@ -26,7 +27,6 @@ class Evolution:
         """
         return 1 if x >= 0.5 else 0
     
-    
     def _eval_genomes(self, genomes, config):
         for id, genome in genomes:
             genome.fitness = self._dataset.train_set.shape[0]
@@ -36,7 +36,27 @@ class Evolution:
             predicted = np.array([Evolution._binarize_prediction(net.activate(x)[0]) for x in self._dataset.train_set])
             genome.fitness = sklearn.metrics.f1_score(y_pred=predicted, y_true=self._dataset.train_targets) * self._fitness_scaling
 
-    
+
+    def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
+        if scaling:
+            self._dataset.scale_features()
+
+        if any(['pca', 'lda'] == dimension_reduction):
+            # number of input nodes are reduce. Dynamically change neat config also.
+            self._dataset.reduce_dimensions(dimension_reduction)
+            num_features = self._dataset.train_set.shape[1]
+            
+            parser = configparser.ConfigParser()
+            parser.read(config_path)
+            parser.set('DefaultGenome', 'num_inputs', str(num_features))
+
+            with open(config_path, 'w') as f:
+                parser.write(f)
+
+        return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+
+
+
     def run(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
 
         population = neat.Population(self._neat_config)
@@ -44,7 +64,6 @@ class Evolution:
         population.add_reporter(neat.StdOutReporter(show_species_detail=True))
         stats = neat.StatisticsReporter()
         population.add_reporter(stats)
-
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
 
@@ -53,7 +72,7 @@ class Evolution:
             winner = population.run(self._eval_genomes, iterations)
         # TODO
         # get top k best individuals from the populations
-        t = [x[1].fitness for x in population.population.items()]
+        # t = [x[1].fitness for x in population.population.items()]
         self.Best_network = neat.nn.FeedForwardNetwork.create(winner, self._neat_config)
         print(f"Winner {winner}")
         return self.Best_network
