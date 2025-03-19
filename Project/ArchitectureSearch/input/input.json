@@ -1,13 +1,10 @@
 {
     "NEAT":
     {
-        "pop_size" : [100, 250, 500, 1000]
+        "pop_size" : [250, 500, 1000]
     },
     "DefaultGenome" :
     {
-        "conn_add_prob" : [0.25,0.5,0.9],
-        "conn_delete_prob" : [0.25,0.5,0.9],
-        "node_add_prob" : [0.25,0.5,0.9],
-        "node_delete_prob" :[0.25,0.5,0.9]
+        "conn_add_prob" : [0.25,0.5,0.9]
     }
 }
