@@ -9,6 +9,7 @@ import multiprocessing
 import sklearn.metrics._base
 from Dataset import Dataset
 import configparser
+import visualize
 
 class Evolution:
     
@@ -37,16 +38,15 @@ class Evolution:
             predicted = np.array([Evolution._binarize_prediction(net.activate(x)[0]) for x in self._dataset.train_set])
             genome.fitness = sklearn.metrics.f1_score(y_pred=predicted, y_true=self._dataset.train_targets) * self._fitness_scaling
 
-
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
         if scaling:
             self._dataset.scale_features()
-
+        
         if dimension_reduction == 'lda' or dimension_reduction == 'pca':
             # number of input nodes are reduce. Dynamically change neat config also.
             self._dataset.reduce_dimensions(dimension_reduction)
             num_features = self._dataset.train_set.shape[1]
-
+            
             parser = configparser.ConfigParser()
             parser.read(config_path)
             parser.set('DefaultGenome', 'num_inputs', str(num_features))
@@ -66,14 +66,14 @@ class Evolution:
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
 
-            winner = population.run(para_eval.eval_function, iterations)
+            self._winner = population.run(para_eval.eval_function, iterations)
         else:
-            winner = population.run(self._eval_genomes, iterations)
+            self._winner = population.run(self._eval_genomes, iterations)
         # TODO
         # get top k best individuals from the populations
         # t = [x[1].fitness for x in population.population.items()]
-        self.Best_network = neat.nn.FeedForwardNetwork.create(winner, self._neat_config)
-        print(f"Winner {winner}")
+        self.Best_network = neat.nn.FeedForwardNetwork.create(self._winner, self._neat_config)
+        print(f"Winner {self._winner}")
         return self.Best_network
     
     def validation(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
@@ -93,3 +93,9 @@ class Evolution:
             'confusion_matrix' : sklearn.metrics.confusion_matrix(y_pred=predicted, y_true=target_set),
             'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
         }
+
+    def visualize(self, save_path :str ):
+        if self.Best_network is None:
+            return # nothing to vizualize\
+        
+        visualize.draw_net(config=self._neat_config,genome=self._winner, view=False, filename=save_path)
