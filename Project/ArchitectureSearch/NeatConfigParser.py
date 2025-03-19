@@ -1,6 +1,6 @@
 import configparser
 import itertools
-
+import os
 class NeatConfigParser:
     @staticmethod
     def _getDefaultAttributes():
@@ -95,21 +95,45 @@ class NeatConfigParser:
             if not parser.has_option(section,options):
                 parser.set(section, options, str(value))
 
+    def _get_values(self, config: dict[dict[str, list[any]]]) -> list[any] :
+        """_summary_
 
-    def createConfig(self, config: dict[tuple[str, str], list[any]], add_default_values: bool = True):
+        Args:
+            config (dict[dict[str, list[any]]]): parsed json file as a dictionary 
+
+        Returns:
+            list[any]: Values
+        """
+        lst = []
+        for options in config.values() :
+            lst.extend(options.values())
+        return lst
+    
+    def _get_keys(self, config: dict[dict[str, list[any]]]) -> list[tuple[str, any]]:
+        tuples = []
+        for section in config.keys():
+            dict = config[section]
+            for option in dict.keys():
+                tuples.append((section, option))
+        return tuples
+    
+    def createConfig(self, config: dict[dict[str, list[any]]], add_default_values: bool = True):
         """_summary_
         Creates neat config with all possible value combinations specified in the dictionary. Works similary as a grid search in sklearn.
         Args:
             config (dict[tuple[str, str], list[any]]): dictionary where key is tuple of section and option and whose value is a list of all possible values.
             add_default_values (bool, optional): Defaults to True. If true adds in default values in config file otherwise not.
         """
-        combinations = list(itertools.product(*config.values()))
-        
+        values = self._get_values(config)
+        keys = self._get_keys(config)
+        combinations = list(itertools.product(*values))
+
         for comb in combinations:
+            # TODO create dir normally with os.create dir
             name= self._dir+"/"
             parser = configparser.ConfigParser()
 
-            for (section, option), value in zip(config.keys(), comb): # keys should be in the same order as the index in combinationn
+            for (section, option), value in zip(keys,comb): # keys should be in the same order as the index in combinationn
                 if not parser.has_section(section=section):
                     parser.add_section(section)
                 parser.set(section, option, str(value))
@@ -121,3 +145,5 @@ class NeatConfigParser:
 
             with open(name, 'w') as f:
                 parser.write(f)
+
+
