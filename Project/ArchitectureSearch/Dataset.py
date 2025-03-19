@@ -4,6 +4,7 @@ import sklearn.decomposition
 import sklearn.discriminant_analysis
 from sklearn.preprocessing import StandardScaler
 import sklearn
+
 class Dataset:
     """_summary_
     Dataset wrapper. 
@@ -32,7 +33,7 @@ class Dataset:
         scaler = StandardScaler()
         self.train_set = scaler.fit_transform(self.train_set)
         self.test_set = scaler.transform(self.test_set)
-    
+
     def reduce_dimensions(self, method: str = 'lda'):
         """
         Reduce dimensions of test and train data
@@ -46,7 +47,7 @@ class Dataset:
             ValueError: If method is unknown dimension reduction methon
         """
         if method.lower() == 'lda':
-            
+
             lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
             self.train_set = lda.fit_transform(self.train_set, self.train_targets)
             self.test_set = lda.transform(self.test_set)
