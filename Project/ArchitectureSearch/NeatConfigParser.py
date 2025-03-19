@@ -1,6 +1,8 @@
 import configparser
 import itertools
 import os
+import json
+
 class NeatConfigParser:
     @staticmethod
     def _getDefaultAttributes():
@@ -80,7 +82,10 @@ class NeatConfigParser:
     def __init__(self, directory: str):
         self._dir = directory
         self._suffix = '.ini'
-    
+        # Create a new directory if it doesn't exist
+        if not os.path.isdir(self._dir):
+            os.makedirs(self._dir)
+
     def _add_default_values(self, parser: configparser.ConfigParser):
         """_summary_
         Adds default neat config values.
@@ -117,33 +122,41 @@ class NeatConfigParser:
                 tuples.append((section, option))
         return tuples
     
-    def createConfig(self, config: dict[dict[str, list[any]]], add_default_values: bool = True):
+    def _parse_input(self, input: str) -> dict[dict[str, list[any]]]:
+        with open(input) as file:
+            return json.load(file)
+        
+    def createConfig(self, input: str, add_default_values: bool = True):
         """_summary_
         Creates neat config with all possible value combinations specified in the dictionary. Works similary as a grid search in sklearn.
         Args:
             config (dict[tuple[str, str], list[any]]): dictionary where key is tuple of section and option and whose value is a list of all possible values.
             add_default_values (bool, optional): Defaults to True. If true adds in default values in config file otherwise not.
         """
-        values = self._get_values(config)
-        keys = self._get_keys(config)
+        input_config = self._parse_input(input)
+
+        values = self._get_values(input_config)
+        keys = self._get_keys(input_config)
         combinations = list(itertools.product(*values))
 
         for comb in combinations:
             # TODO create dir normally with os.create dir
-            name= self._dir+"/"
+            file_name= ""
             parser = configparser.ConfigParser()
 
             for (section, option), value in zip(keys,comb): # keys should be in the same order as the index in combinationn
                 if not parser.has_section(section=section):
                     parser.add_section(section)
                 parser.set(section, option, str(value))
-                name += f"{option}-{value} "
-            name += self._suffix
+                file_name += f"{option}-{value} "
+            file_name += self._suffix
 
             if add_default_values:
                 self._add_default_values(parser=parser)
+                
+            full_path = os.path.join(self._dir, file_name)
 
-            with open(name, 'w') as f:
+            with open(full_path, 'w') as f:
                 parser.write(f)
 
 
