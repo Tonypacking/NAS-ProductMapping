@@ -115,6 +115,14 @@ class NeatConfigParser:
         return lst
     
     def _get_keys(self, config: dict[dict[str, list[any]]]) -> list[tuple[str, any]]:
+        """Parses first two keys from json.
+
+        Args:
+            config (dict[dict[str, list[any]]]): json file as a dictionary
+
+        Returns:
+            list[tuple[str, any]]: Returns list of tuples representing (Section, option) in .ini file.
+        """
         tuples = []
         for section in config.keys():
             dict = config[section]
@@ -123,22 +131,33 @@ class NeatConfigParser:
         return tuples
     
     def _parse_input(self, input: str) -> dict[dict[str, list[any]]]:
+        """Helper function to parse json file into dictionary.
+
+        Args:
+            input (str): json path file
+
+        Returns:
+            dict[dict[str, list[any]]]: Parsed Json as a dictionary.
+        """
         with open(input) as file:
             return json.load(file)
         
-    def createConfig(self, input: str, add_default_values: bool = True):
+    def createConfig(self, input: str, add_default_values: bool = True) -> list[str]:
         """_summary_
         Creates neat config with all possible value combinations specified in the dictionary. Works similary as a grid search in sklearn.
         Args:
             config (dict[tuple[str, str], list[any]]): dictionary where key is tuple of section and option and whose value is a list of all possible values.
             add_default_values (bool, optional): Defaults to True. If true adds in default values in config file otherwise not.
+
+        Returns:
+            list[str]: List of config names
         """
         input_config = self._parse_input(input)
 
         values = self._get_values(input_config)
         keys = self._get_keys(input_config)
         combinations = list(itertools.product(*values))
-
+        created_configs = []
         for comb in combinations:
             # TODO create dir normally with os.create dir
             file_name= ""
@@ -149,14 +168,17 @@ class NeatConfigParser:
                     parser.add_section(section)
                 parser.set(section, option, str(value))
                 file_name += f"{option}-{value} "
-            file_name += self._suffix
 
+            file_name = file_name.rstrip() + self._suffix
+            
             if add_default_values:
                 self._add_default_values(parser=parser)
-                
+
             full_path = os.path.join(self._dir, file_name)
 
             with open(full_path, 'w') as f:
                 parser.write(f)
+            created_configs.append(full_path)
 
+        return created_configs
 
