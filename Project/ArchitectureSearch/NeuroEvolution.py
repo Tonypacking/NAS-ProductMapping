@@ -9,6 +9,7 @@ import multiprocessing
 import sklearn.metrics._base
 from Dataset import Dataset
 import configparser
+
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
@@ -41,11 +42,11 @@ class Evolution:
         if scaling:
             self._dataset.scale_features()
 
-        if any(['pca', 'lda'] == dimension_reduction):
+        if dimension_reduction == 'lda' or dimension_reduction == 'pca':
             # number of input nodes are reduce. Dynamically change neat config also.
             self._dataset.reduce_dimensions(dimension_reduction)
             num_features = self._dataset.train_set.shape[1]
-            
+
             parser = configparser.ConfigParser()
             parser.read(config_path)
             parser.set('DefaultGenome', 'num_inputs', str(num_features))
@@ -54,8 +55,6 @@ class Evolution:
                 parser.write(f)
 
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
-
-
 
     def run(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
 
