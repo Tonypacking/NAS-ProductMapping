@@ -4,6 +4,7 @@ import argparse
 import NeuroEvolution
 import NeatConfigParser
 import os 
+import pickle
 
 def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
     if not generate:
@@ -17,26 +18,42 @@ def main(args: argparse.Namespace):
     generated_configs = generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default)
     
     if args.all_files:
-        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.SUFFIX)]
+        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.SUFFIX)]
     else:
         configs = generated_configs
 
     for config in configs:
-        print(config)
-    a = ProductsDatasets.LoadByName(args.dataset)
+        data = ProductsDatasets.LoadByName(args.dataset)
+        # create output path directory -  args.output
+        if not os.path.isdir(args.output):
+            os.mkdir(args.output)
+        
+        evolution = NeuroEvolution.Evolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
-    config = "Config/ProMapCz"
-    evolution = NeuroEvolution.Evolution(config, a, scaling=args.scale, dimension_reduction=args.dimension_reduction)
-    evolution.run(args.iterations, args.parallel)
-    print(evolution.Name)
-    print(f"validation of: {evolution.validation()}")
+        # extract folder name in which we will save our results.
+        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.SUFFIX)]
+
+        output_path = os.path.join(args.output, evolution.dataset_name, folder_name)
+
+        if not os.path.isdir(output_path):
+            os.makedirs(output_path, exist_ok=True)
+
+        evolution.run(args.iterations, args.parallel)
+        output = evolution.validation()
+        print(f"Output: {output}")
+        
+        evolution.visualize(os.path.join(output_path,'BestNetwork'))
+        
+        with open(os.path.join(output_path,'best_network'), 'wb') as f:
+            if evolution.Best_network is not None:
+                pickle.dump(evolution.Best_network,f)
+
     # TODO create a directory visualization and store there the png file, confusion matrix, f1 scores and other values
     # also 1. Fitness Over Generations:
     # 3. Distribution of Fitness Scores:
     # 4. Species Diversity:
     
-    # TODO check if output path exists
-    evolution.visualize('vizual/a')
+
 
     
 if __name__ == "__main__":
@@ -53,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=ProductsDatasets.NAME_MAP.keys(), help='name of promap dataset or path')
 
     # output arguments
-    parser.add_argument('--output', '-o', type=str.lower, default='output', help='Output path')
+    parser.add_argument('--output', '-o', type=str.lower, default='output', help='Output directory name.')
 
     # Config generation
     parser.add_argument('--config_directory', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
