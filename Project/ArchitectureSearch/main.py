@@ -5,7 +5,7 @@ import NeuroEvolution
 import NeatConfigParser
 import os 
 import pickle
-
+import numpy as np
 def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
     if not generate:
         return
@@ -40,21 +40,20 @@ def main(args: argparse.Namespace):
 
         evolution.run(args.iterations, args.parallel)
         output = evolution.validation()
-        print(f"Output: {output}")
-        
+        np.set_printoptions(linewidth=np.inf)
+        print(output)
+        with open(os.path.join(output_path, 'Validation results:'), mode='w') as f :
+            for key, value in output.items():
+                # special case confusion matrix
+                if isinstance(value, np.ndarray):
+                    value = [list(x) for x in value]
+                f.write(f"{key}: {str(value)}\n\n")
+
+                
         evolution.visualize(os.path.join(output_path,'BestNetwork'))
-        
         with open(os.path.join(output_path,'best_network'), 'wb') as f:
             if evolution.Best_network is not None:
                 pickle.dump(evolution.Best_network,f)
-
-    # TODO create a directory visualization and store there the png file, confusion matrix, f1 scores and other values
-    # also 1. Fitness Over Generations:
-    # 3. Distribution of Fitness Scores:
-    # 4. Species Diversity:
-    
-
-
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
