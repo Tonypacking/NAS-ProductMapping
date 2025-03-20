@@ -4,6 +4,8 @@ import os
 import json
 
 class NeatConfigParser:
+
+    SUFFIX = '.neat'
     @staticmethod
     def _getDefaultAttributes():
         """_summary_
@@ -81,7 +83,7 @@ class NeatConfigParser:
 
     def __init__(self, directory: str):
         self._dir = directory
-        self._suffix = '.ini'
+
         # Create a new directory if it doesn't exist
         if not os.path.isdir(self._dir):
             os.makedirs(self._dir)
@@ -159,7 +161,6 @@ class NeatConfigParser:
         combinations = list(itertools.product(*values))
         created_configs = []
         for comb in combinations:
-            # TODO create dir normally with os.create dir
             file_name= ""
             parser = configparser.ConfigParser()
 
@@ -169,7 +170,7 @@ class NeatConfigParser:
                 parser.set(section, option, str(value))
                 file_name += f"{option}-{value} "
 
-            file_name = file_name.rstrip() + self._suffix
+            file_name = file_name.rstrip() + NeatConfigParser.SUFFIX
             
             if add_default_values:
                 self._add_default_values(parser=parser)
