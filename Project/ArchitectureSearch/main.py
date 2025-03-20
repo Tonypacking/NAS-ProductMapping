@@ -50,7 +50,8 @@ def main(args: argparse.Namespace):
                     value = [list(x) for x in value]
                 f.write(f"{key}: {str(value)}\n\n")
         
-        evolution.visualize(os.path.join(output_path,'BestNetwork'))
+        evolution.plot_network(os.path.join(output_path,'BestNetwork'))
+        evolution.plot_statistics(os.path.join(output_path,'Statistics'))
         with open(os.path.join(output_path,'best_network'), 'wb') as f:
             if evolution.Best_network is not None:
                 pickle.dump(evolution.Best_network,f)

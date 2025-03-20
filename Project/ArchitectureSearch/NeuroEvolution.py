@@ -62,8 +62,8 @@ class Evolution:
         population = neat.Population(self._neat_config)
 
         population.add_reporter(neat.StdOutReporter(show_species_detail=True))
-        stats = neat.StatisticsReporter()
-        population.add_reporter(stats)
+        self._statistics = neat.StatisticsReporter()
+        population.add_reporter(self._statistics)
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
 
@@ -93,10 +93,12 @@ class Evolution:
             'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
         }
 
-    def visualize(self, save_path :str ):
+    def plot_network(self, save_path :str, view = False ):
         if self.Best_network is None:
             return # nothing to vizualize
-        # TODO
-        # plot species
-        # plot stats
-        visualize.draw_net(config=self._neat_config,genome=self._winner, view=False, filename=save_path)
+        visualize.draw_net(config=self._neat_config,genome=self._winner, view=view, filename=save_path)
+        
+    def plot_statistics(self, save_path :str, view = False ):
+        if self._statistics is None:
+            return # nothing to vizualize
+        visualize.plot_stats(self._statistics, filename=save_path, view=view)
