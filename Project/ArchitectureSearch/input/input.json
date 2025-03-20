@@ -1,7 +1,7 @@
 {
     "NEAT":
     {
-        "pop_size" : [250, 500, 1000]
+        "pop_size" : [250, 500]
     },
     "DefaultGenome" :
     {
