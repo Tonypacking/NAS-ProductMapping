@@ -17,7 +17,7 @@ def main(args: argparse.Namespace):
     generated_configs = generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default)
     
     if args.all_files:
-        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith('.ini')]
+        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.SUFFIX)]
     else:
         configs = generated_configs
 
@@ -34,6 +34,7 @@ def main(args: argparse.Namespace):
     # also 1. Fitness Over Generations:
     # 3. Distribution of Fitness Scores:
     # 4. Species Diversity:
+    
     # TODO check if output path exists
     evolution.visualize('vizual/a')
 

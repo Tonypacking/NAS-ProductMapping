@@ -97,5 +97,7 @@ class Evolution:
     def visualize(self, save_path :str ):
         if self.Best_network is None:
             return # nothing to vizualize\
-        
+        # TODO
+        # plot species
+        # plot stats
         visualize.draw_net(config=self._neat_config,genome=self._winner, view=False, filename=save_path)
