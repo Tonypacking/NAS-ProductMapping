@@ -11,11 +11,12 @@ from Dataset import Dataset
 import configparser
 import visualize
 
+
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
         self._dataset :Dataset = dataset
-        self.Name = self._dataset.dataset_name
+        self.dataset_name = self._dataset.dataset_name
         
         self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
         self._population = neat.Population(self._neat_config)
@@ -69,9 +70,7 @@ class Evolution:
             self._winner = population.run(para_eval.eval_function, iterations)
         else:
             self._winner = population.run(self._eval_genomes, iterations)
-        # TODO
-        # get top k best individuals from the populations
-        # t = [x[1].fitness for x in population.population.items()]
+
         self.Best_network = neat.nn.FeedForwardNetwork.create(self._winner, self._neat_config)
         print(f"Winner {self._winner}")
         return self.Best_network
@@ -96,7 +95,7 @@ class Evolution:
 
     def visualize(self, save_path :str ):
         if self.Best_network is None:
-            return # nothing to vizualize\
+            return # nothing to vizualize
         # TODO
         # plot species
         # plot stats
