@@ -3,6 +3,7 @@ import neat.genes
 import numpy as np
 import sklearn
 import neat
+import sklearn.discriminant_analysis
 import sklearn.metrics
 from typing import Sequence, Optional
 import multiprocessing
@@ -10,19 +11,21 @@ import sklearn.metrics._base
 from Dataset import Dataset
 import configparser
 import visualize
-
+import ProMap
 
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
-        
-        self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
-        self._population = neat.Population(self._neat_config)
         self.Best_network = None
         self._fitness_scaling = 1_000 
+        self._transformer = None
+        self._scaler = None
 
+        self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
+        self._population = neat.Population(self._neat_config)
+ 
     @staticmethod
     def _binarize_prediction(x: float) -> int:
         """
@@ -41,13 +44,13 @@ class Evolution:
 
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
         if scaling:
-            self._dataset.scale_features()
-        
+            self._scaler = self._dataset.scale_features()
+
         if dimension_reduction == 'lda' or dimension_reduction == 'pca':
             # number of input nodes are reduce. Dynamically change neat config also.
-            self._dataset.reduce_dimensions(dimension_reduction)
+            self._transformer = self._dataset.reduce_dimensions(dimension_reduction)
+
             num_features = self._dataset.train_set.shape[1]
-            
             parser = configparser.ConfigParser()
             parser.read(config_path)
             parser.set('DefaultGenome', 'num_inputs', str(num_features))
@@ -75,10 +78,11 @@ class Evolution:
         print(f"Winner {self._winner}")
         return self.Best_network
     
-    def validation(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
+    def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
         if test_set is None and target_set is None:
             predicted = np.array([Evolution._binarize_prediction(self.Best_network.activate(x)[0]) for x in self._dataset.test_set])
             target_set = self._dataset.test_targets
+
         elif (test_set is None and target_set is not None) or (test_set is not None and target_set is None):
             assert ValueError("Invalid test set or target set")
         else:
@@ -93,6 +97,26 @@ class Evolution:
             'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
         }
 
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
+        outputs = []
+        for name in ProMap.ProductsDatasets.NAME_MAP:
+            dataset= ProMap.ProductsDatasets.Load_by_name(name)
+
+            if dataset.feature_labels.shape != self._dataset.feature_labels.shape:
+                print(dataset.dataset_name, dataset.feature_labels.shape)
+                print(self._dataset.dataset_name, self._dataset.feature_labels.shape)       
+                print('datasets features are different, cannot transform them')
+                continue
+
+            if self._scaler:
+                dataset.test_set = self._scaler.transform(dataset.test_set)
+                
+            if self._transformer:
+                dataset.test_set = self._transformer.transform(dataset.test_set)
+
+            outputs.append((dataset.dataset_name, self.validate(dataset.test_set, dataset.test_targets)))
+        return outputs
+    
     def plot_network(self, save_path :str, view = False ):
         if self.Best_network is None:
             return # nothing to vizualize
