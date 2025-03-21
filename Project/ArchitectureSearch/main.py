@@ -1,4 +1,5 @@
 import pandas as pd
+import sklearn.metrics
 from ProMap import ProductsDatasets
 import argparse
 import NeuroEvolution
@@ -6,6 +7,8 @@ import NeatConfigParser
 import os 
 import pickle
 import numpy as np
+import sklearn 
+import matplotlib.pyplot as plt
 
 def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
     if not generate:
@@ -24,31 +27,45 @@ def main(args: argparse.Namespace):
         configs = generated_configs
 
     for config in configs:
-        data = ProductsDatasets.LoadByName(args.dataset)
+        data = ProductsDatasets.Load_by_name(args.dataset)
         # create output path directory -  args.output
         if not os.path.isdir(args.output):
             os.mkdir(args.output)
-        
+
         evolution = NeuroEvolution.Evolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract folder name in which we will save our results.
         folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.SUFFIX)]
+        used_preprocessing = '_'
+        if args.scale:
+            used_preprocessing += 'Standard_Scaling_'
 
-        output_path = os.path.join(args.output, evolution.dataset_name, folder_name)
+        used_preprocessing += args.dimension_reduction
+
+        output_path = os.path.join(args.output, evolution.dataset_name+used_preprocessing, folder_name)
 
         if not os.path.isdir(output_path):
             os.makedirs(output_path, exist_ok=True)
 
         evolution.run(args.iterations, args.parallel)
-        output = evolution.validation()
-        np.set_printoptions(linewidth=np.inf)
-        print(output)
-        with open(os.path.join(output_path, 'Validation_results.txt:'), mode='w') as f :
-            for key, value in output.items():
-                # special case confusion matrix
-                if isinstance(value, np.ndarray):
-                    value = [list(x) for x in value]
-                f.write(f"{key}: {str(value)}\n\n")
+
+        if args.validate_all:
+            outputs = evolution.validate_all()
+        else:
+            outputs = [(evolution.dataset_name, evolution.validate())]
+        for dataset_name, output in outputs:
+            with open(os.path.join(output_path, f'{dataset_name}_validation_results.txt'), mode='w') as f :
+                for key, value in output.items():
+                    # special case : confusion matrix is printited as a png file
+                    if isinstance(value, np.ndarray):
+                        display = sklearn.metrics.ConfusionMatrixDisplay(confusion_matrix=value, display_labels= ['Non-Match','Match'])
+                        display.plot(cmap='Blues', values_format='d',)
+                        plt.tight_layout()
+                        plt.savefig(os.path.join(output_path, f'{dataset_name}_confusion_matrix.png'))
+                        plt.close()
+                        continue
+
+                    f.write(f"{key}: {str(value)}\n\n")
         
         evolution.plot_network(os.path.join(output_path,'BestNetwork'))
         evolution.plot_statistics(os.path.join(output_path,'Statistics'))
@@ -71,7 +88,7 @@ if __name__ == "__main__":
 
     # output arguments
     parser.add_argument('--output', '-o', type=str.lower, default='output', help='Output directory name.')
-
+    parser.add_argument('--validate_all', '--v', action='store_true', default=False, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
     # Config generation
     parser.add_argument('--config_directory', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
     parser.add_argument('--config_generation', '-g', default=True, action='store_false',help='Disables config generation')
