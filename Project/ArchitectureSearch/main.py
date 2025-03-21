@@ -125,15 +125,15 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=ProductsDatasets.NAME_MAP.keys(), help='name of promap dataset or path')
 
     # output arguments
-    parser.add_argument('--output', '-o', type=str.lower, default='output', help='Output directory name.')
+    parser.add_argument('--output', '--o', type=str.lower, default='output', help='Output directory name.')
     parser.add_argument('--validate_all', '--v', action='store_true', default=False, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     # Config generation
-    parser.add_argument('--config_directory', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
-    parser.add_argument('--config_generation', '-g', default=True, action='store_false',help='Disables config generation')
+    parser.add_argument('--config_directory', '--dir', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
+    parser.add_argument('--config_generation', '--g', default=True, action='store_false',help='Disables config generation')
     parser.add_argument('--input', '--i', type=str, default='input/input.json', help='Path to config generation input.')
-    parser.add_argument('--default', action='store_false', default=True, help='Disables default value generations in config.' )
-    parser.add_argument('--all_files','--n', action='store_true', default=False, help='Generates configs from all ini files in config directory set by config_directory argument. ')
+    parser.add_argument('--default','--def', action='store_true', default=False, help='Disables default value generations in config.' )
+    parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all ini files in config directory set by config_directory argument. ')
     
     main(parser.parse_args())
 
