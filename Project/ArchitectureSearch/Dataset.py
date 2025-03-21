@@ -26,15 +26,16 @@ class Dataset:
         self.test_targets = testing_data.iloc[:, -1].values
         self.testing_product_ids = testing_data[self.ids].values
         
-    def scale_features(self):
+    def scale_features(self) -> StandardScaler:
         """
         Standardize features via sklearn.preprocessing.StandardScaler
         """
         scaler = StandardScaler()
         self.train_set = scaler.fit_transform(self.train_set)
         self.test_set = scaler.transform(self.test_set)
-
-    def reduce_dimensions(self, method: str = 'lda'):
+        return scaler
+    
+    def reduce_dimensions(self, method: str = 'lda') -> sklearn.decomposition.PCA | sklearn.discriminant_analysis.LinearDiscriminantAnalysis:
         """
         Reduce dimensions of test and train data
         LDA will compute maximum number of components based on the number of classes in the dataset.
@@ -47,14 +48,14 @@ class Dataset:
             ValueError: If method is unknown dimension reduction methon
         """
         if method.lower() == 'lda':
-
             lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
             self.train_set = lda.fit_transform(self.train_set, self.train_targets)
             self.test_set = lda.transform(self.test_set)
+            return lda
         elif method.lower() == 'pca':
-
             pca = sklearn.decomposition.PCA(n_components=0.95)
             self.train_set = pca.fit_transform(self.train_set)
             self.test_set = pca.transform(self.test_set)
+            return pca
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
