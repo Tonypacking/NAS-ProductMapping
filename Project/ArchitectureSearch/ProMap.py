@@ -19,7 +19,7 @@ class ProductsDatasets:
     }
 
     @staticmethod
-    def LoadByName(name : str) -> Dataset:
+    def Load_by_name(name : str) -> Dataset:
         """Loads Product datasets based on shorter name.
 
         Args:
@@ -40,14 +40,14 @@ class ProductsDatasets:
                 return ProductsDatasets.Load_basic_promap_cz()
             case 'promapen' :
                 return ProductsDatasets.Load_basic_promap_en()
-            case ' promapczext' :
+            case 'promapczext' :
                 return ProductsDatasets.Load_extended_promap_cz()
-            case ' promapenext' :
+            case 'promapenext' :
                 return ProductsDatasets.Load_extended_promap_en()
             case 'amazonext':
                 return ProductsDatasets.Load_extended_amazon_walmart()
             case _:
-                raise ValueError('Unknown dataset shorter name')
+                raise ValueError(f'Unknown dataset: {name}')
     
     @staticmethod
     def __Split_data(path:str, dataset_name: str) -> Dataset:
