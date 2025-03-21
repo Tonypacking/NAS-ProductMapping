@@ -11,6 +11,17 @@ import sklearn
 import matplotlib.pyplot as plt
 
 def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
+    """Helper function to generate config files.
+
+    Args:
+        config_directory (str): Path to config directory in which all generated configs will be saved.
+        input_path (str): Path to input json file
+        generate (bool, optional): If new configs are to be generated. Defaults to True.
+        add_defaul (bool, optional): Explicitly adds default neat values to the config. Defaults to True.
+
+    Returns:
+        None
+    """
     if not generate:
         return
 
@@ -19,6 +30,11 @@ def generate_configs(config_directory : str, input_path: str,  generate : bool =
 
 
 def main(args: argparse.Namespace):
+    """Main function in which neuron architecture search runs.
+
+    Args:
+        args (argparse.Namespace): User's arguments.
+    """
     generated_configs = generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default)
     
     if args.all_files:
