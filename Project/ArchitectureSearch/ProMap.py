@@ -68,6 +68,14 @@ class ProductsDatasets:
     
     @staticmethod
     def Load_basic_amazon_google(path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
+        """Loads amazon google dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "amazon_google")
     @staticmethod
     def __Split_data(path:str, dataset_name: str) -> Dataset:
@@ -88,30 +96,86 @@ class ProductsDatasets:
     
     @staticmethod
     def Load_basic_amazon_google(path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
+        """Loads amazon google dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "amazon_google")
     
     @staticmethod
     def Load_basic_amazon_walmart(path:str = os.path.join(_default_basic_path, "amazon-walmart") ) -> Dataset:
+        """Loads amazon walmart dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "amazon_walmart")
 
     @staticmethod
     def Load_basic_promap_cz(path :str =  os.path.join(_default_basic_path,"ProMapCz")  ) -> Dataset:
+        """Loads promap cz dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "promapcz")
 
     @staticmethod
     def Load_basic_promap_en(path:str = os.path.join(_default_basic_path, "ProMapEn") ) -> Dataset:
+        """Loads promap en dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "promapen")
 
     @staticmethod
     def Load_extended_promap_cz(path: str = _default_extended_path) -> Dataset:
+        """Loads extended promap cz  dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "promapczext")
 
     @staticmethod
     def Load_extended_promap_en(path: str = _default_extended_path) -> Dataset:
+        """Loads extended promap en  dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "promapenext")
     
     @staticmethod
     def Load_extended_amazon_walmart(path: str = _default_extended_path) -> Dataset:
+        """Loads extended amazon walmart dataset
+
+        Args:
+            path (str, optional): _description_. Path to the promap dataset
+
+        Returns:
+            Dataset: Dataset encapsulation.
+        """
         return ProductsDatasets.__Split_data(path, "promapmulti_amazon_ext")
     
     

@@ -4,7 +4,8 @@ import os
 import json
 
 class NeatConfigParser:
-
+    """Class for creating configurations for neuron architecture search.
+    """
     SUFFIX = '.neat'
     @staticmethod
     def _getDefaultAttributes():
