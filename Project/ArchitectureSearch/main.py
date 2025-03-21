@@ -42,6 +42,7 @@ def main(args: argparse.Namespace):
     else:
         configs = generated_configs
 
+    best_networks = []
     for config in configs:
         data = ProductsDatasets.Load_by_name(args.dataset)
         # create output path directory -  args.output
@@ -53,6 +54,7 @@ def main(args: argparse.Namespace):
         # extract folder name in which we will save our results.
         folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.SUFFIX)]
         used_preprocessing = '_'
+
         if args.scale:
             used_preprocessing += 'Standard_Scaling_'
 
@@ -69,6 +71,8 @@ def main(args: argparse.Namespace):
             outputs = evolution.validate_all()
         else:
             outputs = [(evolution.dataset_name, evolution.validate())]
+        
+
         for dataset_name, output in outputs:
             with open(os.path.join(output_path, f'{dataset_name}_validation_results.txt'), mode='w') as f :
                 for key, value in output.items():
@@ -82,15 +86,33 @@ def main(args: argparse.Namespace):
                         continue
 
                     f.write(f"{key}: {str(value)}\n\n")
+
+                    if key == 'f1_score':
+                        best_networks.append((value, dataset_name+used_preprocessing+'_'+folder_name))
         
         evolution.plot_network(os.path.join(output_path,'BestNetwork'))
         evolution.plot_statistics(os.path.join(output_path,'Statistics'))
+
         with open(os.path.join(output_path,'best_network'), 'wb') as f:
             if evolution.Best_network is not None:
                 pickle.dump(evolution.Best_network,f)
+
+    best_networks.sort(key=lambda x: x[0], reverse=True)
+    best_networks_path = os.path.join(args.output,'best_networks',evolution.dataset_name+used_preprocessing)
+
+    if not os.path.isdir(best_networks_path):
+        os.makedirs(best_networks_path, exist_ok=True)
+
+    with open(best_networks_path+'best', mode='w') as f :
+        for rank, (value, path) in enumerate(best_networks[: args.kbest], start=1):
+            f.write(f"Rank: {rank} with f1_score: {value}.   Attributes: {path}\n")
+
+    print(best_networks[:args.kbest])
+    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
     # Neat arguments
     parser.add_argument('--parallel', '--par',  action='store_true', default=False, help="Runs Neat in parallel.",)
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in neat')
@@ -105,6 +127,7 @@ if __name__ == "__main__":
     # output arguments
     parser.add_argument('--output', '-o', type=str.lower, default='output', help='Output directory name.')
     parser.add_argument('--validate_all', '--v', action='store_true', default=False, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
+    parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     # Config generation
     parser.add_argument('--config_directory', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
     parser.add_argument('--config_generation', '-g', default=True, action='store_false',help='Disables config generation')
