@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     # output arguments
     parser.add_argument('--output', '--o', type=str.lower, default='output', help='Output directory name.')
-    parser.add_argument('--validate_all', '--v', action='store_true', default=False, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
+    parser.add_argument('--validate_all', '--v', action='store_false', default=True, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     # Config generation
     parser.add_argument('--config_directory', '--dir', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
