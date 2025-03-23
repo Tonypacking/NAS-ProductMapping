@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('--config_directory', '--dir', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
     parser.add_argument('--config_generation', '--g', default=True, action='store_false',help='Disables config generation')
     parser.add_argument('--input', '--i', type=str, default='input/input.json', help='Path to config generation input.')
-    parser.add_argument('--default','--def', action='store_true', default=False, help='Disables default value generations in config.' )
+    parser.add_argument('--default','--def', action='store_false', default=True, help='Disables default value generations in config.' )
     parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all ini files in config directory set by config_directory argument. ')
     
     main(parser.parse_args())
