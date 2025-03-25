@@ -69,13 +69,13 @@ class EvolutionaryNeuronNetwork:
              self._nn = pickle.load(model)
 
 
-
-
 class WeightSearch:
 
     def __init__(self, args: argparse.Namespace):
         np.random.seed(seed=args.seed)
         random.seed(args.seed)
+        self._save_path = args.save
+
         self.nn = EvolutionaryNeuronNetwork(args, (8,4,2))
 
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -108,10 +108,10 @@ class WeightSearch:
        
         _ = algorithms.eaGenerateUpdate(self._toolbox, ngen=25, stats=self._stats, halloffame=self._hall_of_fame)
 
-        nn.change_weights(weights=self._hall_of_fame[0])
-        print(nn.test())
+        self.nn.change_weights(weights=self._hall_of_fame[0])
+        print(self.nn.test())
 
-        nn.save_network(save_path=args.save) 
+        self.nn.save_network(save_path=self._save_path) 
 
 
 
