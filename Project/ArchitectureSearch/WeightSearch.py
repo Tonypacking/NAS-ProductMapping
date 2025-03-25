@@ -68,7 +68,6 @@ class EvolutionaryNeuronNetwork:
          with open(model_path, 'rb') as model:
              self._nn = pickle.load(model)
 
-
 class WeightSearch:
 
     def __init__(self, args: argparse.Namespace):
@@ -76,17 +75,17 @@ class WeightSearch:
         random.seed(args.seed)
         self._save_path = args.save
 
-        self.nn = EvolutionaryNeuronNetwork(args, (8,4,2))
+        self._neuron_network = EvolutionaryNeuronNetwork(args, (8,4,2))
 
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
         self._toolbox = base.Toolbox()
-        self._toolbox.register("evaluate", lambda ind: WeightSearch.fitness(nn, ind))
+        self._toolbox.register("evaluate", lambda ind: WeightSearch.fitness(self._neuron_network, ind))
         self._toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
         self._toolbox.register("mutate_polynomial", tools.mutPolynomialBounded, eta=20.0, indpb=0.2)
         self._toolbox.register("mutate_lognormal", tools.mutESLogNormal, mu=0.0, sigma=0.1, indpb=0.2)
-        strategy = cma.Strategy(centroid=[0.0] * nn.n_parameters, sigma=0.5, lambda_= 5 * nn.n_parameters)
+        strategy = cma.Strategy(centroid=[0.0] * self._neuron_network.n_parameters, sigma=0.5, lambda_= 5 * self._neuron_network.n_parameters)
         self._toolbox.register("generate", strategy.generate, creator.Individual)
         self._toolbox.register("update", strategy.update)
 
@@ -108,10 +107,10 @@ class WeightSearch:
        
         _ = algorithms.eaGenerateUpdate(self._toolbox, ngen=25, stats=self._stats, halloffame=self._hall_of_fame)
 
-        self.nn.change_weights(weights=self._hall_of_fame[0])
-        print(self.nn.test())
+        self._neuron_network.change_weights(weights=self._hall_of_fame[0])
+        print(self._neuron_network.test())
 
-        self.nn.save_network(save_path=self._save_path) 
+        self._neuron_network.save_network(save_path=self._save_path) 
 
 
 
