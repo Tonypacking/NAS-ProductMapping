@@ -1,93 +1,97 @@
-# vrba_adam
+# Finding neuron architectures in product mapping.
+
+## launch program
+With default arguments: `python3 main`.
+Requires input/input.json (if input argument isn't set) which validates json schema. And it also requires data with all Product mapping datasets from [this dataset](https://github.com/kackamac/Product-Mapping-Datasets)
+### Program arguments
+- **Neat arguments**
+    - **Parallel**
+        - If set, genome evaluation runs in parralel.
+        - Example usage: `python3 main.py  --parallel` or `python3  python3 main.py  --par`
+        - Default: False 
+        - Type: bool
+    - **Iterations**
+        -  Sets maximum number of generations in each neat generation.
+        - Example usage: `python3 main.py --iterations 50` or `python3 main.py  --iter 50`
+        - Default: 50
+        - Type: integer
+
+- **Dataset preprocessing arguments**
+    - **Dimenstion reduction**
+        - If set dataset is preprocessed and dimensions are reduced by  sklearn library either with LDA or PCA.
+        - Example usage `python3 main.py dimension_reduction raw` or `python3 main.py  dims pca`
+        - Default: raw
+        - Type: string
+        - Possible values: raw, pca, lda.
+
+    - **Data standardization**
+        - If set, standardizes dataset by sklearn library with StandardScaler.
+        - Example usage: `python3 main.py --scale ` or `python3 main.py --s`
+        - Default: False
+        - Type: bool
+
+- **Dataset arguments**
+    - **Dataset**
+        - Runs neruon architecture search on passed dataset.
+        - Possible dataset names: 
+            - google
+            - walmart
+            - promapcz
+            - promapen
+            - promapczext
+            - promapenext
+            - amazonext
+        - Example usage: `python3 main.py --dataset promapcz` or `python3 main.py --o promapczext`
+        - Default: promapcz
+        - Type string, only which are possible others are ignored and program won't start.
+        
+- **Output arguments**
+    - **Output path**
+        - Creates if directory doesn't exist with a passed path where the output of this program is stored.
+        - Example usage `python3 main.py --output output` or `python3 main.py --o output `
+        - Default: Output
+        - Type: Any valid path
+    - **Data validations**
+        - If set, model is validated against all possible target dataset. If number of features  doesn't match it is ignored. If dimensions are reduces, it first trires to transforms test dataset if it fails it is ignored.
+        - Example usage: `python3 main.py --validate_all` or `python3 main.py --v`
+        - Default: Validations only with designated test set
+        - Type: Bool
+    - **kbest**
+        -  Saves results of top k networks in seperate folder.
+        - Example usage `python3 main.py --kbest` or `python3 main.py --k`
+        - Default: 10
+        - Type: integer 
+
+- **Config generation**
+    -   **Configuration directory**
+        - Directory name where the generation neat configs are to be generated. 
+        - Example usage: `python3 main.py --config_directory path` or `python3 main.py --dir config/generation/example/path`
+        - Default: ConfigGeneration
+        - Type: Any valid path for a directory. 
+
+    -   **Configuration generation**
+        - If set it disables neat config generation.
+        - Example usage: `python3 main.py --config_generation` or `python3 main.py --g`
+        - Default: True
+        - Type: bool
+
+    -   **Input**
+        - Path to input json file. Needs to be valid against json schema.
+        - Example usage: `python3 main.py --input input/input.json` or `python3 main.py --i input/input.json`
+        - Default: input/input.json
+        - Type: any valid path to json file which is valid against json schema.
+
+    -   **Default**
+        - If set default value generations in genrating neat config file are disabled.
+        - Example usage: `python3 main.py --default` or `python3 main.py --def`
+        - Default: False
+        -  Type: bool
 
 
+    -   **Search for all files in configuration directory**
+        - If set instead of searching architectures only for newly generated **.ini** files. It tris to find architectures of every**.init** files in the ConfigGeneration directory (if default arguments isn't changed otherwises it looks for all .ini files in the set directory).
+        - Example usage: `python3 main.py --all_files` or `python3 main.py --all`
+        - Default: False
+        - Type: bool
 
-## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.mff.cuni.cz/teaching/nprg045/mackova/vrba_adam.git
-git branch -M master
-git push -uf origin master
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.mff.cuni.cz/teaching/nprg045/mackova/vrba_adam/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
