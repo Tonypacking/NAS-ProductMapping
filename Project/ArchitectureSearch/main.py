@@ -9,6 +9,7 @@ import pickle
 import numpy as np
 import sklearn 
 import matplotlib.pyplot as plt
+import random
 
 def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
     """Helper function to generate config files.
@@ -35,6 +36,11 @@ def main(args: argparse.Namespace):
     Args:
         args (argparse.Namespace): User's arguments.
     """
+    np.random.seed(seed=args.seed)
+    random.seed(args.seed)
+
+
+
     generated_configs = generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default)
     
     if args.all_files:
@@ -112,6 +118,10 @@ def main(args: argparse.Namespace):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--save', type=str, default='Saves/', help='Path to a save directory')
+    parser.add_argument('--seed', default=42, type=int, help='Sets a seed to random number generation.')
+
 
     # Neat arguments
     parser.add_argument('--parallel', '--par',  action='store_true', default=False, help="Runs Neat in parallel.",)
