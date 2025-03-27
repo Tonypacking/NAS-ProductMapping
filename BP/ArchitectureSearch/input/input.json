@@ -1,0 +1,10 @@
+{
+    "NEAT":
+    {
+        "pop_size" : [250]
+    },
+    "DefaultGenome" :
+    {
+        "conn_add_prob" : [0.25]
+    }
+}
