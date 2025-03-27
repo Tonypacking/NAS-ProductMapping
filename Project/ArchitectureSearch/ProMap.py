@@ -1,13 +1,14 @@
 import pandas as pd
 import os
 from Dataset import Dataset
+from pathlib import Path
 class ProductsDatasets:
     """_summary_
     Class for easily loading and manipulating ProMap datasets.
     """
-    _default_basic_path = "../Data/Product-Mapping-Datasets/Basic ProMap Datasets"  # Default basic dataset root path
-    _default_extended_path = "../Data/Product-Mapping-Datasets/Extended ProMap Datasets/ProMapsExtended/similarities" # Default extended dataset root path
-    _default_multi_path = "../Data/Product-Mapping-Datasets/Extended ProMap Datasets/ProMapsMulti/similarities"
+    _default_basic_path = os.path.join(Path(os.path.join(__file__,"../../Data/Product-Mapping-Datasets/Basic ProMap Datasets" )).resolve())  # Default basic dataset root path
+    _default_extended_path = os.path.join(Path(os.path.join(__file__,"../../Data/Product-Mapping-Datasets/Extended ProMap Datasets/ProMapsExtended/similarities" )).resolve())  # Default extended dataset root path
+    _default_multi_path = os.path.join(Path(os.path.join(__file__,"../../Data/Product-Mapping-Datasets/Basic ProMap Datasets")).resolve()) 
     NAME_MAP = {
         'google' : 'amazon-google',
         'walmart' : "amazon-walmart",
