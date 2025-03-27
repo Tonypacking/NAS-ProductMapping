@@ -9,7 +9,7 @@ def main(args: argparse.Namespace):
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
     eva_search = WeightSearch(args)
-    eva_search.run()
+    eva_search.run(args.generations)
 
 
 if __name__ == "__main__":
@@ -21,6 +21,7 @@ if __name__ == "__main__":
     # Evolution weight search arguments
     parser.add_argument('--save', type=str, default='Saves/', help='Directory for saving every generated model')
     parser.add_argument('--load', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
+    parser.add_argument('--generations', '--gen', type=int, default=50, help='Nmber of generations in weight search evolution.')
     parser.add_argument('--metrics',type=str.lower,default='f1_macro',choices=EvolutionaryNeuronNetwork.Get_Metrics().keys(), help='Fitness function for searching weights via evolution algorithms')
     
 

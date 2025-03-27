@@ -1,7 +1,7 @@
+import pprint
 import sklearn
 import numpy as np
 import argparse
-import random
 import pickle
 import os
 import sys
@@ -11,21 +11,25 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..
 
 from deap import creator, algorithms, base, tools, cma
 from Utils.ProMap import ProductsDatasets
-from enum import Enum
 
 class EvolutionaryNeuronNetwork:
     """
-    Wrapper of sklearn NN.
+    Wrapper of neural network. Provides simple api changing weight of NN. 
     """
     def __init__(self, args: argparse.Namespace, hidden_layer_size: tuple[int]):
         self._nn = sklearn.neural_network.MLPClassifier(hidden_layer_sizes=hidden_layer_size, max_iter=1) # set max iter to 1, so biases and weight shapes are defined
         self._dataset = ProductsDatasets.Load_by_name(args.dataset)
         self._nn.fit(self._dataset.train_set, self._dataset.train_targets)
         self.n_parameters = self._parameter_count()
-        self._metrics = self.Choose_metric(args.metrics)
+        self._metrics = self._choose_metric(args.metrics)
 
     @staticmethod
     def Get_Metrics() -> dict[str, callable]:
+        """Gets all possible callable metrics which can be used as a fitness function in evolution algorithms
+
+        Returns:
+            dict[str, callable]: Dictionary of metric's name and a callable function.
+        """
         binary = partial(sklearn.metrics.f1_score, average='binary')
         weighted = partial(sklearn.metrics.f1_score, average='weighted')
         macro = partial(sklearn.metrics.f1_score, average='macro')
@@ -41,7 +45,18 @@ class EvolutionaryNeuronNetwork:
             "recall" : sklearn.metrics.recall_score,  
         }
     
-    def Choose_metric(self, metric: str):
+    def _choose_metric(self, metric: str) -> callable:
+        """Chooses specific metric which will be used as a fitness metric in evolution algorithm.
+
+        Args:
+            metric (str): Name of the metric function
+
+        Raises:
+            ValueError: Raises value error if metric doesn't exist. All possible metrics can be obtained from EvolutionaryNeuronNetwork.Get_Metrtics().keys()
+
+        Returns:
+            callable: Chosen metric.
+        """
         metrics = EvolutionaryNeuronNetwork.Get_Metrics()
         if metric in metrics:
             return metrics[metric]
@@ -98,10 +113,20 @@ class EvolutionaryNeuronNetwork:
         return self._metrics(y_true= self._dataset.train_targets, y_pred=pred)
     
     def validate(self) -> float:
+        """Validates neuron network.
+
+        Returns:
+            float: f1_score of a NN.
+        """
         pred = self._nn.predict(self._dataset.test_set)
         return sklearn.metrics.f1_score(y_true=self._dataset.test_targets, y_pred=pred) 
 
     def validate_all(self) -> dict[str, float]:
+        """Validates NN againsts f1 score (binary, macro, micro and weighted average), precision, recall, accuracy and confusion matrix
+
+        Returns:
+            dict[str, float]: Dictionary of metric's name and metric's validation.
+        """
         pred = self._nn.predict(self._dataset.test_set)
         return {
             'f1_score_binary' : sklearn.metrics.f1_score(y_true=self._dataset.test_targets, y_pred=pred, average="binary"),
@@ -137,7 +162,8 @@ class EvolutionaryNeuronNetwork:
              self._nn = pickle.load(model)
 
 class WeightSearch:
-
+    """Main algorithm for searching weights in NN via evolution algorithms.
+    """
     def __init__(self, args: argparse.Namespace):
         self._save_path = args.save
         self._neuron_network = EvolutionaryNeuronNetwork(args, (8,4,2))
@@ -179,10 +205,13 @@ class WeightSearch:
 
         return fitness
     
-    def run(self):
-       
-        (pop, stats) = algorithms.eaGenerateUpdate(self._toolbox, ngen=2, stats=self._stats, halloffame=self._hall_of_fame)
-        self._neuron_network.change_weights(weights=self._hall_of_fame[0])
-        print(self._neuron_network.validate_all())
+    def run(self, generations: int):
+        """Runs weight search neuroevolution generation.
 
+        Args:
+            generations (int): Number of generations in evolution algorithm.
+        """
+        (pop, stats) = algorithms.eaGenerateUpdate(self._toolbox, ngen=generations, stats=self._stats, halloffame=self._hall_of_fame)
+        self._neuron_network.change_weights(weights=self._hall_of_fame[0])
+        pprint.pprint(self._neuron_network.validate_all())
         self._neuron_network.save_network(save_path=self._save_path) 
