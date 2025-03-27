@@ -1,4 +1,4 @@
-# visualization is not in neat. 
+# visualization is not in neat package. 
 # implementation taken from https://github.com/CodeReclaimers/neat-python/blob/master/examples/xor/visualize.py
 import copy
 import warnings
