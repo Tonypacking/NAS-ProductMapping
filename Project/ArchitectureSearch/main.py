@@ -1,10 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pandas as pd
 import sklearn.metrics
-from ProMap import ProductsDatasets
+from Utils.ProMap import ProductsDatasets
 import argparse
 import NeuroEvolution
 import NeatConfigParser
-import os 
 import pickle
 import numpy as np
 import sklearn 

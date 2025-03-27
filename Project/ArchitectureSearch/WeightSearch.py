@@ -5,7 +5,7 @@ import random
 import pickle
 
 from deap import creator, algorithms, base, tools, cma
-from ProMap import ProductsDatasets
+from Utils.ProMap import ProductsDatasets
 import os
 
 class EvolutionaryNeuronNetwork:
@@ -111,10 +111,4 @@ class WeightSearch:
         print(self._neuron_network.test())
 
         self._neuron_network.save_network(save_path=self._save_path) 
-
-
-
-
-
-
 

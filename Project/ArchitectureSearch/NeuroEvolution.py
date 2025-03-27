@@ -8,10 +8,10 @@ import sklearn.metrics
 from typing import Sequence, Optional
 import multiprocessing
 import sklearn.metrics._base
-from Dataset import Dataset
+from Utils.Dataset import Dataset
 import configparser
 import visualize
-import ProMap
+import Utils.ProMap as ProMap
 
 class Evolution:
     

@@ -1,7 +1,8 @@
 import pandas as pd
 import os
-from Dataset import Dataset
+from Utils.Dataset import Dataset
 from pathlib import Path
+
 class ProductsDatasets:
     """_summary_
     Class for easily loading and manipulating ProMap datasets.
