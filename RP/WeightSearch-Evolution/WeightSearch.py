@@ -3,10 +3,12 @@ import numpy as np
 import argparse
 import random
 import pickle
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
 
 from deap import creator, algorithms, base, tools, cma
 from Utils.ProMap import ProductsDatasets
-import os
 
 class EvolutionaryNeuronNetwork:
 
@@ -111,4 +113,3 @@ class WeightSearch:
         print(self._neuron_network.test())
 
         self._neuron_network.save_network(save_path=self._save_path) 
-
