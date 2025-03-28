@@ -4,3 +4,5 @@
 /BP/output
 **/__pycache__/
 Utils/__pycache__/Dataset.cpython-312.pyc
+Saves/evolutionary_neuron_network.model
+**/Save
