@@ -141,9 +141,7 @@ class Evolution:
             dataset= ProMap.ProductsDatasets.Load_by_name(name)
 
             if dataset.feature_labels.shape != self._dataset.feature_labels.shape:
-                print(dataset.dataset_name, dataset.feature_labels.shape)
-                print(self._dataset.dataset_name, self._dataset.feature_labels.shape)       
-                print('datasets features are different, cannot transform them')
+                print(f'Datasets features are different, cannot transform them\nTested dataset name: {dataset.dataset_name} of shape {dataset.feature_labels.shape}\nTrained on {self._dataset.dataset_name} of shape {self._dataset.feature_labels.shape}')
                 continue
 
             if self._scaler:
