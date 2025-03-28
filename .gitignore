@@ -1,8 +1,6 @@
-/BP/ArchitectureSearch/__pycache__
 /BP/ArchitectureSearch/ConfigGeneration
 /BP/ArchitectureSearch/output
-/BP/ArchitectureSearch/__pycache__
 /BP/ConfigGeneration
 /BP/output
-/BP/Utils/__pycache__
-/RP/WeightSearch_Evolution/__pycache__
+**/__pycache__/
+Utils/__pycache__/Dataset.cpython-312.pyc
