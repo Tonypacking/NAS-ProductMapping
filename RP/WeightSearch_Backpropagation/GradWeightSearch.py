@@ -29,13 +29,19 @@ class Backprop_Weight_Search:
         if args.dimension_reduction:
             self._transformer = self._dataset.reduce_dimensions(method=args.dimension_reduction)
 
-    
     def run(self, iterations: int, seed: int = 42, parallel = None):
         if parallel:
             parallel = -1
-
-        scoring_metrics = [ 'precision_macro', 'precision', 'recall_macro', 'recall', 'f1_macro', 'f1_micro', 'accuracy',]
-
+        
+        scoring_metrics = {
+            'precision_macro': sklearn.metrics.make_scorer(sklearn.metrics.precision_score),
+            'precision':  sklearn.metrics.make_scorer(sklearn.metrics.precision_score, average='binary', zero_division=0),
+            'recall_macro':  sklearn.metrics.make_scorer(sklearn.metrics.recall_score, average='macro', zero_division=0),
+            'recall':  sklearn.metrics.make_scorer(sklearn.metrics.recall_score, average='binary', zero_division=0),
+            'f1_macro':  sklearn.metrics.make_scorer(sklearn.metrics.f1_score, average='macro', zero_division=0),
+            'f1_micro':  sklearn.metrics.make_scorer(sklearn.metrics.f1_score, average='micro', zero_division=0),
+            'accuracy':  sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        }
         grid_search = sklearn.model_selection.GridSearchCV(estimator=sklearn.neural_network.MLPClassifier(
             random_state=seed, verbose=True, max_iter=iterations), param_grid=self._param_grid, cv=5, n_jobs=parallel, refit='f1_macro', scoring=scoring_metrics
             )
@@ -43,8 +49,7 @@ class Backprop_Weight_Search:
         grid_search.fit(self._dataset.train_set, self._dataset.train_targets)
 
         self.best_model = grid_search.best_estimator_
-
-        
+    
     def save_network(self, save_path: str):
         """Saves a NN.
         Args:
@@ -59,8 +64,6 @@ class Backprop_Weight_Search:
         with open(os.path.join(save_path,f'evolutionary_neuron_network.model'), mode='wb') as f:
             pickle.dump(self.best_model, f)
 
-
-    
     def load_model(self, model_path):
         """Loads a sklearn model from given path
 
@@ -94,7 +97,7 @@ class Backprop_Weight_Search:
             'confusion_matrix' : sklearn.metrics.confusion_matrix(y_true=test_targets, y_pred=pred),
         }
     
-    def validate_all(self) -> dict[str, float]:
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
         """Validates against all promap datasets if feature count is the same.
 
         Returns:
