@@ -1,15 +1,30 @@
-from WeightSearch_Evolution import WeightSearch, EvolutionaryNeuronNetwork
+from WeightSearch_Evolution import Evo_WeightSearch, EvolutionaryNeuronNetwork
+from WeightSearch_Backpropagation import Backprop_Weight_Search
 import re
+from pprint import pprint
 from Utils.ProMap import ProductsDatasets
 import argparse
 import numpy as np
 import random
+
+
+
+
 def main(args: argparse.Namespace):
 
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
-    eva_search = WeightSearch(args)
-    eva_search.run(args.generations)
+
+    grad_search = Backprop_Weight_Search(args)
+
+    grad_search.run(args.iterations, seed = args.seed, parallel=True)
+    pprint(grad_search.validate_all()
+)
+    # eva_search = Evo_WeightSearch(args)
+    # eva_search.run(args.generations)
+    # pprint(eva_search._neuron_network.validate())
+    # pprint(eva_search._neuron_network.validate_all())
+
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
@@ -50,15 +65,19 @@ if __name__ == "__main__":
     # General options
     parser.add_argument('--seed', default=42, type=int, help='Sets a seed to random number generation.')
     parser.add_argument('--hidden_layers', '--h', default="8 4 2, 16 8", type=parse_tuple_list, help='A list of tuples specifying the sizes of hidden layers. Input is string coma separates tuples. Values must be integers.'
-    ' Example format: "1 2 3 4, 5 6 , 7" is parsed to [(1,2,3,4), (5,6), (7)]')
-
+        ' Example format: "1 2 3 4, 5 6 , 7" is parsed to [(1,2,3,4), (5,6), (7)]')
+    parser.add_argument('--method', '--m')
 
     # Evolution weight search arguments
-    parser.add_argument('--save', type=str, default='Saves/', help='Directory for saving every generated model')
-    parser.add_argument('--load', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
+    parser.add_argument('--save_evo', '--se', type=str, default='Saves/', help='Directory for saving every generated model')
+    parser.add_argument('--load_evo', '--le', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
     parser.add_argument('--generations', '--gen', type=int, default=50, help='Nmber of generations in weight search evolution.')
     parser.add_argument('--metrics',type=str.lower,default='f1_macro',choices=EvolutionaryNeuronNetwork.Get_Metrics().keys(), help='Fitness function for searching weights via evolution algorithms')
     
+    # Backpropagation weight search arguments
+    parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in backpropagation weight search.')
+    parser.add_argument('--save_back', '--sb', type=str, default='Saves/', help='Directory for saving every generated model')
+    parser.add_argument('--load_back', '--lb', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
