@@ -1,2 +1,2 @@
-from .WeightSearch import WeightSearch
+from .WeightSearch import Evo_WeightSearch
 from .WeightSearch import EvolutionaryNeuronNetwork
