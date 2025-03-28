@@ -6,9 +6,16 @@ from Utils.ProMap import ProductsDatasets
 import argparse
 import numpy as np
 import random
+import csv
 
+def log_statistics(save_path: str, statistics: list[tuple[str, dict[str, float]]]):
 
-
+    header = ['TestedData'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
+    with open(save_path, mode='w', newline='') as file:            
+        writer = csv.writer(file)
+        writer.writerow(header)
+        for test_data_name, score_dict in statistics:
+            writer.writerow([test_data_name] + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
 def main(args: argparse.Namespace):
 
@@ -18,13 +25,13 @@ def main(args: argparse.Namespace):
     grad_search = Backprop_Weight_Search(args)
 
     grad_search.run(args.iterations, seed = args.seed, parallel=True)
-    pprint(grad_search.validate_all()
-)
+    statistics = grad_search.validate_all()
+    log_statistics('test.csv', statistics=statistics)
+
     # eva_search = Evo_WeightSearch(args)
     # eva_search.run(args.generations)
     # pprint(eva_search._neuron_network.validate())
     # pprint(eva_search._neuron_network.validate_all())
-
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
