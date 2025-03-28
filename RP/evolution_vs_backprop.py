@@ -18,17 +18,52 @@ def log_statistics(save_path: str, statistics: list[tuple[str, dict[str, float]]
         for test_data_name, score_dict in statistics:
             writer.writerow([test_data_name] + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
+def run_all(args: argparse):
+    if args.run_all == 'all':
+        dims = ['raw', 'lda', 'pca']
+        promap_data = ProductsDatasets.NAME_MAP.keys()
+
+    elif args.run_all == 'dim':
+        promap_data = [args.dataset]
+        dims = ['raw', 'lda', 'pca']
+
+    elif args.run_all == 'dataset':
+        promap_data = ProductsDatasets.NAME_MAP.keys()
+        dims = [args.dimension_reduction]
+    else:
+        raise ValueError('Invalid argumnet.')
+    
+    for dim_reduction in dims:
+        args.dimension_reduction = dim_reduction
+        for dataset_name in promap_data:
+            args.dataset = dataset_name
+            
+            evo_path = os.path.join(args.save_evo, dim_reduction, dataset_name)
+            back_path = os.path.join(args.save_back, dim_reduction, dataset_name)
+            
+            os.makedirs(name=evo_path, exist_ok=True)
+            os.makedirs(name=back_path, exist_ok=True)
+
+            # Backpropagation weight search
+
+
+            # Evolutionary weight search
+
 def main(args: argparse.Namespace):
 
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
 
+    if args.run_all:
+        run_all(args=args)
+        return
+    
     grad_search = Backprop_Weight_Search(args)
-
     grad_search.run(args.iterations, seed = args.seed, parallel=True)
     statistics = grad_search.validate_all()
     log_statistics(args.save_back+'/test.csv', statistics=statistics)
 
+    grad_search.retrain_best_model()
     # eva_search = Evo_WeightSearch(args)
     # eva_search.run(args.generations)
     # pprint(eva_search._neuron_network.validate())
@@ -81,6 +116,10 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_layers', '--h', default="8 4 2, 16 8", type=parse_tuple_list, help='A list of tuples specifying the sizes of hidden layers. Input is string coma separates tuples. Values must be integers.'
         ' Example format: "1 2 3 4, 5 6 , 7" is parsed to [(1,2,3,4), (5,6), (7)]')
     parser.add_argument('--method', '--m')
+    parser.add_argument('--run_all', '--all',choices=['all', 'dim', 'dataset'] ,default=None, help=
+                        'Choices:\nAll- runs all promap datasets.\n'
+                        'Dim:- runs all possible dimension reductions only for one dataset(chosen by --dataset argument)\n'
+                        'Dataset- runs and trains on all promap datasets with only one dimension reduction (chosen by --dims argument) ')
 
     # Evolution weight search arguments
     parser.add_argument('--save_evo', '--se', type=str, default=evo_path, help='Directory for saving every generated model')
