@@ -57,5 +57,8 @@ class Dataset:
             self.train_set = pca.fit_transform(self.train_set)
             self.test_set = pca.transform(self.test_set)
             return pca
+        elif method.lower() == 'raw':
+            # No dimension reduction
+            return None
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
