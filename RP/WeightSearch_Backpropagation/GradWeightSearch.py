@@ -8,6 +8,7 @@ import sklearn.model_selection
 import sklearn.neural_network
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets
+import numpy as np
 
 class Backprop_Weight_Search:
     def __init__(self, args: argparse.Namespace ):
@@ -50,6 +51,33 @@ class Backprop_Weight_Search:
 
         self.best_model = grid_search.best_estimator_
     
+    def retrain_best_model(self):
+        """Retrains best model
+        """
+        if not self.best_model:
+            print('Model is none, cant retrain it')
+
+        params = self.best_model.get_params()
+        max_iters = params['max_iter']
+        params['max_iter'] = 1
+        newModel = sklearn.neural_network.MLPClassifier(**params)
+        classes = np.unique(self._dataset.train_targets)
+
+        train_accuracies = []
+        validation_accuracies = []
+        
+        for i in range(max_iters):
+            newModel.partial_fit(self._dataset.train_set, self._dataset.train_targets, classes=classes)
+            pred_train = newModel.predict(self._dataset.train_set)
+            pred_test = newModel.predict(self._dataset.test_set)
+
+            train_accuracies.append(sklearn.metrics.accuracy_score(y_pred=pred_train, y_true=self._dataset.train_targets))
+            validation_accuracies.append(sklearn.metrics.accuracy_score(y_pred=pred_test, y_true=self._dataset.test_targets))
+
+        # print('\n\n\n')
+        # print(sklearn.metrics.accuracy_score(y_pred=self.best_model.predict(self._dataset.test_set), y_true=self._dataset.test_targets))
+        # print(validation_accuracies[-1])
+
     def save_network(self, save_path: str):
         """Saves a NN.
         Args:
