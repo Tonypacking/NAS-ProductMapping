@@ -7,9 +7,10 @@ import argparse
 import numpy as np
 import random
 import csv
+import os
+import sys
 
 def log_statistics(save_path: str, statistics: list[tuple[str, dict[str, float]]]):
-
     header = ['TestedData'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
     with open(save_path, mode='w', newline='') as file:            
         writer = csv.writer(file)
@@ -26,7 +27,7 @@ def main(args: argparse.Namespace):
 
     grad_search.run(args.iterations, seed = args.seed, parallel=True)
     statistics = grad_search.validate_all()
-    log_statistics('test.csv', statistics=statistics)
+    log_statistics(args.save_back+'/test.csv', statistics=statistics)
 
     # eva_search = Evo_WeightSearch(args)
     # eva_search.run(args.generations)
@@ -68,6 +69,12 @@ def parse_tuple_list(values: str) -> list[tuple[int]]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    default_save_path = os.path.join(os.path.dirname(__file__), 'Save')
+    
+    evo_path = os.path.join(default_save_path, 'Evolutionary_search')
+    backprop_path = os.path.join(default_save_path, 'Backpropagation_search')
+    os.makedirs(name=evo_path,exist_ok=True)
+    os.makedirs(name=backprop_path,exist_ok=True)
 
     # General options
     parser.add_argument('--seed', default=42, type=int, help='Sets a seed to random number generation.')
@@ -76,14 +83,14 @@ if __name__ == "__main__":
     parser.add_argument('--method', '--m')
 
     # Evolution weight search arguments
-    parser.add_argument('--save_evo', '--se', type=str, default='Saves/', help='Directory for saving every generated model')
+    parser.add_argument('--save_evo', '--se', type=str, default=evo_path, help='Directory for saving every generated model')
     parser.add_argument('--load_evo', '--le', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
     parser.add_argument('--generations', '--gen', type=int, default=50, help='Nmber of generations in weight search evolution.')
     parser.add_argument('--metrics',type=str.lower,default='f1_macro',choices=EvolutionaryNeuronNetwork.Get_Metrics().keys(), help='Fitness function for searching weights via evolution algorithms')
     
     # Backpropagation weight search arguments
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in backpropagation weight search.')
-    parser.add_argument('--save_back', '--sb', type=str, default='Saves/', help='Directory for saving every generated model')
+    parser.add_argument('--save_back', '--sb', type=str, default=backprop_path, help='Directory for saving every generated model')
     parser.add_argument('--load_back', '--lb', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
 
     # dataset preprocessing arguments
