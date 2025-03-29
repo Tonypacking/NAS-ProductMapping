@@ -53,7 +53,14 @@ class Backprop_Weight_Search:
         self.best_model = grid_search.best_estimator_
     
     def plot_bestmodel_accuracy_progress(self, directory_save_path: str, show: bool = False) -> sklearn.neural_network.MLPClassifier:
-        """Retrains best model
+        """Retrains model on best params found from run
+
+        Args:
+            directory_save_path (str): Directory path where the output of all accuracies are saved.
+            show (bool, optional): True to show generated plot. Defaults to False.
+
+        Returns:
+            sklearn.neural_network.MLPClassifier: Best model.
         """
         if not self.best_model:
             print('Model is none, cant retrain it')
@@ -72,7 +79,7 @@ class Backprop_Weight_Search:
         }
 
         test_accuracies = {}
-        for dataset_name in ProductsDatasets.NAME_MAP.keys():
+        for dataset_name in ProductsDatasets.NAME_MAP.keys(): # generate all possible testing promap datasets. Skips those whose feature count before dim. reduction aren't equal.
             dataset= ProductsDatasets.Load_by_name(dataset_name)
 
             if dataset.feature_labels.shape != self._dataset.feature_labels.shape:   
@@ -94,7 +101,7 @@ class Backprop_Weight_Search:
             }
 
         iterations = range(1, max_iters + 1)
-        for _ in iterations:
+        for _ in iterations: # for each epoch fit the model and store the performance of a model.
             newModel.partial_fit(self._dataset.train_set, self._dataset.train_targets, classes=classes)
 
             for dataset_name in test_accuracies:
@@ -105,27 +112,46 @@ class Backprop_Weight_Search:
                     if name_metric == 'dataset': continue 
 
                     scorer = sklearn.metrics.get_scorer(name_metric)
-                    test_accuracies[dataset_name][name_metric].append(scorer(newModel, dataset.test_set, dataset.test_targets))        
+                    test_accuracies[dataset_name][name_metric].append(scorer(newModel, dataset.test_set, dataset.test_targets))  
 
+                    if len(train_accuracies[name_metric]) < max_iters:  # dont add the same datast from the begining again training accuracies dont depend on dataset name from accuracies.
+                        train_accuracies[name_metric].append(scorer(newModel, self._dataset.train_set, self._dataset.train_targets))
 
         colormap = plt.get_cmap('tab10')
-        
-        for dataset_name in test_accuracies.keys():
-            save_path = os.path.join(directory_save_path, dataset_name)
 
+        # Training accuracy development.
+        train_save_path = os.path.join(directory_save_path, 'Training '+dataset_name)
+        for index, metric in enumerate(train_accuracies.keys()):
+            color = colormap.colors [index % len(colormap.colors)]
+
+            plt.plot(iterations, train_accuracies[metric], label=f"Train {metric}", color=color, linestyle='-')
+
+        plt.xlabel("Iterations")
+        plt.ylabel("Accuracy")
+        plt.title(f"Training accuracy")
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(train_save_path)
+        if show: plt.show()
+        plt.close()       
+
+        # Testing accuracy development
+        for dataset_name in test_accuracies.keys():
+            test_save_path = os.path.join(directory_save_path, dataset_name)
+            
             for index, metric in enumerate(test_accuracies[dataset_name]):
 
                 if metric =='dataset': continue 
                 dataset = test_accuracies[dataset_name]['dataset']
                 color = colormap.colors [index % len(colormap.colors)]
                 plt.plot(iterations, test_accuracies[dataset_name][metric], label=f"Test {metric}", color=color, linestyle='-')
-                plt.xlabel("Iterations")
-                plt.ylabel("Accuracy")
-                plt.title(f"Data trained on {self._dataset.dataset_name} Validation on{dataset_name}")
-                plt.legend()
-                plt.grid(True)
 
-            plt.savefig(save_path)
+            plt.xlabel("Iterations")
+            plt.ylabel("Accuracy")
+            plt.title(f"Data trained on {self._dataset.dataset_name} Validation on{dataset_name}")
+            plt.legend()
+            plt.grid(True)
+            plt.savefig(test_save_path)
             if show: plt.show()
 
             plt.close()
