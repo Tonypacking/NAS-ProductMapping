@@ -9,6 +9,7 @@ import sklearn.neural_network
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Backprop_Weight_Search:
     def __init__(self, args: argparse.Namespace ):
@@ -51,7 +52,7 @@ class Backprop_Weight_Search:
 
         self.best_model = grid_search.best_estimator_
     
-    def retrain_best_model(self):
+    def plot_bestmodel_accuracy_progress(self, directory_save_path: str, show: bool = False) -> sklearn.neural_network.MLPClassifier:
         """Retrains best model
         """
         if not self.best_model:
@@ -59,24 +60,75 @@ class Backprop_Weight_Search:
 
         params = self.best_model.get_params()
         max_iters = params['max_iter']
-        params['max_iter'] = 1
         newModel = sklearn.neural_network.MLPClassifier(**params)
         classes = np.unique(self._dataset.train_targets)
 
-        train_accuracies = []
-        validation_accuracies = []
-        
-        for i in range(max_iters):
+
+        train_accuracies = {
+            'precision':  [],
+            'recall':  [],
+            'f1':  [],
+            'accuracy':  []
+        }
+
+        test_accuracies = {}
+        for dataset_name in ProductsDatasets.NAME_MAP.keys():
+            dataset= ProductsDatasets.Load_by_name(dataset_name)
+
+            if dataset.feature_labels.shape != self._dataset.feature_labels.shape:   
+                print(f'Datasets features are different, cannot transform them\nTested dataset name: {dataset.dataset_name} of shape {dataset.feature_labels.shape}\nTrained on {self._dataset.dataset_name} of shape {self._dataset.feature_labels.shape}')
+                continue
+
+            if self._scaler:
+                dataset.test_set = self._scaler.transform(dataset.test_set)
+                
+            if self._transformer:
+                dataset.test_set = self._transformer.transform(dataset.test_set)
+
+            test_accuracies[dataset_name] = {
+            'precision':  [],
+            'recall':  [],
+            'f1':  [],
+            'accuracy':  [],
+            'dataset' : dataset
+            }
+
+        iterations = range(1, max_iters + 1)
+        for _ in iterations:
             newModel.partial_fit(self._dataset.train_set, self._dataset.train_targets, classes=classes)
-            pred_train = newModel.predict(self._dataset.train_set)
-            pred_test = newModel.predict(self._dataset.test_set)
 
-            train_accuracies.append(sklearn.metrics.accuracy_score(y_pred=pred_train, y_true=self._dataset.train_targets))
-            validation_accuracies.append(sklearn.metrics.accuracy_score(y_pred=pred_test, y_true=self._dataset.test_targets))
+            for dataset_name in test_accuracies:
 
-        # print('\n\n\n')
-        # print(sklearn.metrics.accuracy_score(y_pred=self.best_model.predict(self._dataset.test_set), y_true=self._dataset.test_targets))
-        # print(validation_accuracies[-1])
+                dataset = test_accuracies[dataset_name]['dataset']
+                for name_metric in test_accuracies[dataset_name].keys():
+                    if name_metric == 'dataset': continue
+                    scorer = sklearn.metrics.get_scorer(name_metric)
+                    test_accuracies[dataset_name][name_metric].append(scorer(newModel, dataset.test_set, dataset.test_targets))        
+
+
+        colormap = plt.get_cmap('tab10')
+        
+        for dataset_name in test_accuracies.keys():
+            save_path = os.path.join(directory_save_path, dataset_name+'pdf')
+
+            for index, metric in enumerate(test_accuracies[dataset_name]):
+
+                if metric =='dataset': continue 
+                dataset = test_accuracies[dataset_name]['dataset']
+                color = colormap.colors [index % len(colormap.colors)]
+                plt.plot(iterations, test_accuracies[dataset_name][metric], label=f"Test {metric}", color=color, linestyle='-')
+                plt.xlabel("Iterations")
+                plt.ylabel("Accuracy")
+                plt.title(f"Data trained on {self._dataset.dataset_name} Validation on{dataset_name}")
+                plt.legend()
+                plt.grid(True)
+
+            plt.savefig(save_path)
+
+            plt.show(show)
+            plt.close()
+
+        return newModel
 
     def save_network(self, save_path: str):
         """Saves a NN.
