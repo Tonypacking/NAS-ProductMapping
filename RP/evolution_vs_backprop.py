@@ -44,8 +44,10 @@ def run_all(args: argparse):
             os.makedirs(name=evo_path, exist_ok=True)
             os.makedirs(name=back_path, exist_ok=True)
 
-            # Backpropagation weight search
-
+            # Backpropagation weight search     
+            weight_search = Backprop_Weight_Search(args)
+            weight_search.run(iterations=args.iterations)
+            weight_search.plot_bestmodel_accuracy_progress(back_path,'Gradient_accuracy.pdf', show=False)
 
             # Evolutionary weight search
 
@@ -63,7 +65,7 @@ def main(args: argparse.Namespace):
     statistics = grad_search.validate_all()
     log_statistics(args.save_back+'/test.csv', statistics=statistics)
 
-    grad_search.retrain_best_model()
+    grad_search.plot_bestmodel_accuracy_progress()
     # eva_search = Evo_WeightSearch(args)
     # eva_search.run(args.generations)
     # pprint(eva_search._neuron_network.validate())
@@ -141,7 +143,6 @@ if __name__ == "__main__":
 
     # output arguments
     parser.add_argument('--output', '--o', type=str.lower, default='output', help='Output directory name.')
-    parser.add_argument('--validate_all', '--v', action='store_false', default=True, help='Validates input against all possible datasets. If feature count is not same, it is ignored')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     
     args = parser.parse_args()
