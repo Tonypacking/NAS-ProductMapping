@@ -47,7 +47,7 @@ def run_all(args: argparse):
             # Backpropagation weight search     
             weight_search = Backprop_Weight_Search(args)
             weight_search.run(iterations=args.iterations)
-            weight_search.plot_bestmodel_accuracy_progress(back_path,'Gradient_accuracy.pdf', show=False)
+            weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
 
             # Evolutionary weight search
 
