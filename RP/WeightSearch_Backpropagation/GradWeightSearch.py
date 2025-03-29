@@ -101,7 +101,9 @@ class Backprop_Weight_Search:
 
                 dataset = test_accuracies[dataset_name]['dataset']
                 for name_metric in test_accuracies[dataset_name].keys():
-                    if name_metric == 'dataset': continue
+
+                    if name_metric == 'dataset': continue 
+
                     scorer = sklearn.metrics.get_scorer(name_metric)
                     test_accuracies[dataset_name][name_metric].append(scorer(newModel, dataset.test_set, dataset.test_targets))        
 
@@ -109,7 +111,7 @@ class Backprop_Weight_Search:
         colormap = plt.get_cmap('tab10')
         
         for dataset_name in test_accuracies.keys():
-            save_path = os.path.join(directory_save_path, dataset_name+'pdf')
+            save_path = os.path.join(directory_save_path, dataset_name)
 
             for index, metric in enumerate(test_accuracies[dataset_name]):
 
@@ -124,8 +126,8 @@ class Backprop_Weight_Search:
                 plt.grid(True)
 
             plt.savefig(save_path)
+            if show: plt.show()
 
-            plt.show(show)
             plt.close()
 
         return newModel
