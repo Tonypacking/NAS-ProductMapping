@@ -11,7 +11,7 @@ import sklearn.metrics
 import sklearn.neural_network
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets
-
+import matplotlib.pylab as plt
 class EvolutionaryNeuronNetwork:
     """
     Wrapper of neural network. Provides simple api changing weight of NN. 
@@ -144,7 +144,7 @@ class EvolutionaryNeuronNetwork:
             'confusion_matrix' : sklearn.metrics.confusion_matrix(y_true=test_targets, y_pred=pred),
         }
 
-    def validate_all(self) -> dict[str, float]:
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
         """Validates against all promap datasets if feature count is the same.
 
         Returns:
@@ -193,30 +193,9 @@ class EvolutionaryNeuronNetwork:
 class Evo_WeightSearch:
     """Main algorithm for searching weights in NN via evolution algorithms.
     """
-    def __init__(self, args: argparse.Namespace):
-        self._save_path = args.save
-        self._neuron_network = EvolutionaryNeuronNetwork(args, (8,4,2))
-
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
-
-        self._toolbox = base.Toolbox()
-        self._toolbox.register("evaluate", lambda ind: Evo_WeightSearch._fitness(self._neuron_network, ind))
-        self._toolbox.register("select", tools.selTournament, tournsize=3)
-        
-        self._toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
-
-        strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5, lambda_= 8 * self._neuron_network.n_parameters)
-        self._toolbox.register("generate", strategy.generate, creator.Individual)
-        self._toolbox.register("update", strategy.update)
-
-        self._hall_of_fame = tools.HallOfFame(1)
-
-        self._stats = tools.Statistics(lambda ind: ind.fitness.values)
-        self._stats.register("avg", np.mean)
-        self._stats.register("std", np.std)
-        self._stats.register("min", np.min)
-        self._stats.register("max", np.max)
+    def __init__(self):
+        self._save_path = None
+        self._neuron_network = None
 
     @staticmethod
     def _fitness(network: EvolutionaryNeuronNetwork, individual: list) -> tuple[float]:
@@ -234,13 +213,71 @@ class Evo_WeightSearch:
 
         return fitness
     
-    def run(self, generations: int):
+    def run(self, args: argparse.Namespace):
         """Runs weight search neuroevolution generation.
 
         Args:
             generations (int): Number of generations in evolution algorithm.
         """
-        (pop, stats) = algorithms.eaGenerateUpdate(self._toolbox, ngen=generations, stats=self._stats, halloffame=self._hall_of_fame)
-        self._neuron_network.change_weights(weights=self._hall_of_fame[0])
-        # pprint.pprint(self._neuron_network.validate_all())
+
+        def _evolve(args, hidden_layers):
+            self._neuron_network = EvolutionaryNeuronNetwork(args, hidden_layers)
+
+            toolbox = base.Toolbox()
+            toolbox.register("evaluate", lambda ind: Evo_WeightSearch._fitness(self._neuron_network, ind))
+            toolbox.register("select", tools.selTournament, tournsize=3)
+            
+            toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
+
+            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5, lambda_= 8 * self._neuron_network.n_parameters)
+            toolbox.register("generate", strategy.generate, creator.Individual)
+            toolbox.register("update", strategy.update)
+
+            hall_of_fame = tools.HallOfFame(1)
+
+            stats = tools.Statistics(lambda ind: ind.fitness.values)
+            stats.register("avg", np.mean)
+            stats.register("std", np.std)
+            stats.register("min", np.min)
+            stats.register("max", np.max)
+
+            (pop, stats)= algorithms.eaGenerateUpdate(toolbox, ngen=args.generations, stats=stats, halloffame=hall_of_fame)
+            
+            return hall_of_fame[0], stats
+        
+        def _plot_stats(stats, save_path):
+            x_axis = range(len(stats.select('max')))
+
+            plt.plot(x_axis, stats.select('max'), "b-", label="Maximum Fitness") 
+            plt.plot(x_axis, stats.select('avg'), "r-", label="Average Fitness") 
+            plt.plot(x_axis, stats.select('min'), "g--", label="Minimum Fitness")
+
+            plt.xlabel("Generation")
+            plt.ylabel("Fitness")
+            plt.title("Fitness Evolution Over Generations")
+            plt.legend() 
+            plt.grid(True)
+            plt.savefig(save_path)
+            plt.close()
+
+
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
+        self._save_path = args.save_evo
+        result = []
+
+        for hidden_layers in args.hidden_layers:
+            best_weights, stats = _evolve(args, hidden_layers)
+            fitness = self._fitness(self._neuron_network, individual= best_weights)
+
+            _plot_stats(stats, self._save_path+f'Fit-{fitness}_layers-{hidden_layers}.png')
+
+            result.append((best_weights, fitness))
+
+        best_weights = sorted(result,key= lambda x : x[1], reverse=True)[0]
+
         self._neuron_network.save_network(save_path=self._save_path) 
+
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
+
+        return self._neuron_network.validate_all()
