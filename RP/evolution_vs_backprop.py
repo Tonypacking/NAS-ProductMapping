@@ -1,5 +1,7 @@
+import sklearn.exceptions
 from WeightSearch_Evolution import Evo_WeightSearch, EvolutionaryNeuronNetwork
 from WeightSearch_Backpropagation import Backprop_Weight_Search
+
 import re
 from pprint import pprint
 from Utils.ProMap import ProductsDatasets
@@ -9,6 +11,8 @@ import random
 import csv
 import os
 import sys
+import sklearn
+import warnings
 
 def log_statistics(save_path: str, statistics: list[tuple[str, dict[str, float]]]):
     header = ['TestedData'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
@@ -45,31 +49,37 @@ def run_all(args: argparse):
             os.makedirs(name=back_path, exist_ok=True)
 
             # Backpropagation weight search     
-            weight_search = Backprop_Weight_Search(args)
-            weight_search.run(iterations=args.iterations)
-            weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
-
+            bp_weight_search = Backprop_Weight_Search(args)
+            bp_weight_search.run(iterations=args.iterations)
+            bp_weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
+            ws_output = bp_weight_search.validate_all()
+            
             # Evolutionary weight search
+            ev_weight_search = Evo_WeightSearch()
+            ev_weight_search.run(args)
+         
+
 
 def main(args: argparse.Namespace):
 
+    # set random seeds
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
+    # Ignore Convergence warnings.
+    warnings.filterwarnings('ignore', category=sklearn.exceptions.ConvergenceWarning)
 
     if args.run_all:
         run_all(args=args)
         return
     
-    grad_search = Backprop_Weight_Search(args)
-    grad_search.run(args.iterations, seed = args.seed, parallel=True)
-    statistics = grad_search.validate_all()
-    log_statistics(args.save_back+'/test.csv', statistics=statistics)
-
-    grad_search.plot_bestmodel_accuracy_progress()
-    # eva_search = Evo_WeightSearch(args)
-    # eva_search.run(args.generations)
-    # pprint(eva_search._neuron_network.validate())
-    # pprint(eva_search._neuron_network.validate_all())
+    # grad_search = Backprop_Weight_Search(args)
+    # grad_search.run(args.iterations, seed = args.seed, parallel=True)
+    # statistics = grad_search.validate_all()
+    # grad_search.plot_bestmodel_accuracy_progress()
+    eva_search = Evo_WeightSearch()
+    eva_search.run(args)
+    pprint(eva_search._neuron_network.validate())
+    pprint(eva_search._neuron_network.validate_all())
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
@@ -106,7 +116,7 @@ def parse_tuple_list(values: str) -> list[tuple[int]]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    default_save_path = os.path.join(os.path.dirname(__file__), 'Save')
+    default_save_path = os.path.join(os.path.dirname(__file__), 'Output')
     
     evo_path = os.path.join(default_save_path, 'Evolutionary_search')
     backprop_path = os.path.join(default_save_path, 'Backpropagation_search')
@@ -122,17 +132,16 @@ if __name__ == "__main__":
                         'Choices:\nAll- runs all promap datasets.\n'
                         'Dim:- runs all possible dimension reductions only for one dataset(chosen by --dataset argument)\n'
                         'Dataset- runs and trains on all promap datasets with only one dimension reduction (chosen by --dims argument) ')
-
     # Evolution weight search arguments
     parser.add_argument('--save_evo', '--se', type=str, default=evo_path, help='Directory for saving every generated model')
-    parser.add_argument('--load_evo', '--le', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
+    # parser.add_argument('--load_evo', '--le', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
     parser.add_argument('--generations', '--gen', type=int, default=50, help='Nmber of generations in weight search evolution.')
     parser.add_argument('--metrics',type=str.lower,default='f1_macro',choices=EvolutionaryNeuronNetwork.Get_Metrics().keys(), help='Fitness function for searching weights via evolution algorithms')
     
     # Backpropagation weight search arguments
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in backpropagation weight search.')
     parser.add_argument('--save_back', '--sb', type=str, default=backprop_path, help='Directory for saving every generated model')
-    parser.add_argument('--load_back', '--lb', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
+   # parser.add_argument('--load_back', '--lb', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
@@ -142,7 +151,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=ProductsDatasets.NAME_MAP.keys(), help='name of promap dataset or path')
 
     # output arguments
-    parser.add_argument('--output', '--o', type=str.lower, default='output', help='Output directory name.')
+    parser.add_argument('--output', '--o', type=str.lower, default=default_save_path, help='Output directory name in which data comparison is saved.')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     
     args = parser.parse_args()
