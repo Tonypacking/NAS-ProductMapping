@@ -194,8 +194,10 @@ class Evo_WeightSearch:
     """Main algorithm for searching weights in NN via evolution algorithms.
     """
     def __init__(self):
-        self._save_path = None
         self._neuron_network = None
+        # Define it here so we get no warnings.
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
     @staticmethod
     def _fitness(network: EvolutionaryNeuronNetwork, individual: list) -> tuple[float]:
@@ -213,7 +215,7 @@ class Evo_WeightSearch:
 
         return fitness
     
-    def run(self, args: argparse.Namespace):
+    def run(self, args: argparse.Namespace, plot_save_path: str):
         """Runs weight search neuroevolution generation.
 
         Args:
@@ -229,7 +231,7 @@ class Evo_WeightSearch:
             
             toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
 
-            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5, lambda_= 8 * self._neuron_network.n_parameters)
+            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5 )#, lambda_= 2 * self._neuron_network.n_parameters)
             toolbox.register("generate", strategy.generate, creator.Individual)
             toolbox.register("update", strategy.update)
 
@@ -260,23 +262,19 @@ class Evo_WeightSearch:
             plt.savefig(save_path)
             plt.close()
 
-
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
-        self._save_path = args.save_evo
         result = []
 
         for hidden_layers in args.hidden_layers:
             best_weights, stats = _evolve(args, hidden_layers)
-            fitness = self._fitness(self._neuron_network, individual= best_weights)
+            fitness = self._fitness(self._neuron_network, individual= best_weights)[0]
 
-            _plot_stats(stats, self._save_path+f'Fit-{fitness}_layers-{hidden_layers}.png')
+            _plot_stats(stats, plot_save_path+f'/Fit-{fitness:.3f}_layers-{hidden_layers}.png')
 
             result.append((best_weights, fitness))
 
         best_weights = sorted(result,key= lambda x : x[1], reverse=True)[0]
 
-        self._neuron_network.save_network(save_path=self._save_path) 
+        self._neuron_network.save_network(save_path=args.save_evo) 
 
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
 
