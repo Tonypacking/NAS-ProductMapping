@@ -52,12 +52,13 @@ def run_all(args: argparse):
             bp_weight_search = Backprop_Weight_Search(args)
             bp_weight_search.run(iterations=args.iterations)
             bp_weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
-            ws_output = bp_weight_search.validate_all()
+            # ws_output = bp_weight_search.validate_all()
             
             # Evolutionary weight search
-            ev_weight_search = Evo_WeightSearch()
-            ev_weight_search.run(args)
-         
+            eva_search = Evo_WeightSearch()
+
+            eva_search.run(args, evo_path )
+            
 
 
 def main(args: argparse.Namespace):
@@ -78,8 +79,8 @@ def main(args: argparse.Namespace):
     # grad_search.plot_bestmodel_accuracy_progress()
     eva_search = Evo_WeightSearch()
     eva_search.run(args)
-    pprint(eva_search._neuron_network.validate())
-    pprint(eva_search._neuron_network.validate_all())
+    # pprint(eva_search._neuron_network.validate())
+    # pprint(eva_search._neuron_network.validate_all())
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
