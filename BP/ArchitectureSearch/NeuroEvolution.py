@@ -8,11 +8,13 @@ import sklearn.metrics
 from typing import Sequence, Optional
 import multiprocessing
 import sklearn.metrics._base
-from Utils.Dataset import Dataset
 import configparser
-import visualize
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
+from Utils.Dataset import Dataset
+import Utils.visualize as visualize
 import Utils.ProMap as ProMap
-
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
