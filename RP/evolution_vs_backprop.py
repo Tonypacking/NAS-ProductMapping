@@ -13,16 +13,25 @@ import os
 import sys
 import sklearn
 import warnings
+import csv
 
-def log_statistics(save_path: str, statistics: list[tuple[str, dict[str, float]]]):
-    header = ['TestedData'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
-    with open(save_path, mode='w', newline='') as file:            
+
+def log_statistics(save_path: str,train_dataset:str, method: str, statistics: list[tuple[str, dict[str, float]]], append = False):
+    if not append:
+        header = ['Train dataset','Tested dataset', 'Method'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
+    mode = 'w'
+
+    if append: mode = 'a'
+
+    with open(save_path, mode=mode, newline='') as file:            
         writer = csv.writer(file)
-        writer.writerow(header)
+        if not append: writer.writerow(header)
         for test_data_name, score_dict in statistics:
-            writer.writerow([test_data_name] + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
+            writer.writerow([train_dataset,test_data_name, method] + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
-def run_all(args: argparse):
+
+
+def run_all(args: argparse, validation_path):
     if args.run_all == 'all':
         dims = ['raw', 'lda', 'pca']
         promap_data = ProductsDatasets.NAME_MAP.keys()
@@ -36,7 +45,7 @@ def run_all(args: argparse):
         dims = [args.dimension_reduction]
     else:
         raise ValueError('Invalid argumnet.')
-    
+    append = False
     for dim_reduction in dims:
         args.dimension_reduction = dim_reduction
         for dataset_name in promap_data:
@@ -52,14 +61,16 @@ def run_all(args: argparse):
             bp_weight_search = Backprop_Weight_Search(args)
             bp_weight_search.run(iterations=args.iterations)
             bp_weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
-            # ws_output = bp_weight_search.validate_all()
-            
+            ws_output = bp_weight_search.validate_all()
+            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='backpropagation',append=append,statistics=ws_output)
+            append = True
             # Evolutionary weight search
             eva_search = Evo_WeightSearch()
 
             eva_search.run(args, evo_path )
+            eva_output = eva_search.validate_all()
+            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='evolutionary',append=append,statistics=eva_output)
             
-
 
 def main(args: argparse.Namespace):
 
@@ -69,18 +80,22 @@ def main(args: argparse.Namespace):
     # Ignore Convergence warnings.
     warnings.filterwarnings('ignore', category=sklearn.exceptions.ConvergenceWarning)
 
+    validation_output = os.path.join(args.output, 'validation_predictions.csv')
+
     if args.run_all:
-        run_all(args=args)
+        run_all(args=args, validation_path= validation_output)
         return
     
-    # grad_search = Backprop_Weight_Search(args)
-    # grad_search.run(args.iterations, seed = args.seed, parallel=True)
-    # statistics = grad_search.validate_all()
-    # grad_search.plot_bestmodel_accuracy_progress()
+    grad_search = Backprop_Weight_Search(args)
+    grad_search.run(args.iterations, seed = args.seed, parallel=True)
+    grad_statistics = grad_search.validate_all()
+    grad_search.plot_bestmodel_accuracy_progress(args.save_back)
+    log_statistics(validation_output,args.dataset,'Backpropagation', grad_statistics, append=False)
+
     eva_search = Evo_WeightSearch()
-    eva_search.run(args)
-    # pprint(eva_search._neuron_network.validate())
-    # pprint(eva_search._neuron_network.validate_all())
+    eva_search.run(args, args.save_evo)
+    eva_statistics = eva_search._neuron_network.validate_all()
+    log_statistics(validation_output, args.dataset, 'Evolutionary',eva_statistics, append=True)
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
@@ -118,7 +133,7 @@ def parse_tuple_list(values: str) -> list[tuple[int]]:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     default_save_path = os.path.join(os.path.dirname(__file__), 'Output')
-    
+    os.makedirs(name=default_save_path, exist_ok=True)
     evo_path = os.path.join(default_save_path, 'Evolutionary_search')
     backprop_path = os.path.join(default_save_path, 'Backpropagation_search')
     os.makedirs(name=evo_path,exist_ok=True)
@@ -128,7 +143,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=42, type=int, help='Sets a seed to random number generation.')
     parser.add_argument('--hidden_layers', '--h', default="8 4 2, 16 8", type=parse_tuple_list, help='A list of tuples specifying the sizes of hidden layers. Input is string coma separates tuples. Values must be integers.'
         ' Example format: "1 2 3 4, 5 6 , 7" is parsed to [(1,2,3,4), (5,6), (7)]')
-    parser.add_argument('--method', '--m')
+    # parser.add_argument('--method', '--m')
     parser.add_argument('--run_all', '--all',choices=['all', 'dim', 'dataset'] ,default=None, help=
                         'Choices:\nAll- runs all promap datasets.\n'
                         'Dim:- runs all possible dimension reductions only for one dataset(chosen by --dataset argument)\n'
@@ -152,7 +167,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=ProductsDatasets.NAME_MAP.keys(), help='name of promap dataset or path')
 
     # output arguments
-    parser.add_argument('--output', '--o', type=str.lower, default=default_save_path, help='Output directory name in which data comparison is saved.')
+    parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which data comparison is saved.')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     
     args = parser.parse_args()
