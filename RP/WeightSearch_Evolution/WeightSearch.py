@@ -12,6 +12,9 @@ import sklearn.neural_network
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets
 import matplotlib.pylab as plt
+
+
+
 class EvolutionaryNeuronNetwork:
     """
     Wrapper of neural network. Provides simple api changing weight of NN. 
@@ -84,7 +87,7 @@ class EvolutionaryNeuronNetwork:
 
     def change_weights(self, weights: list):
         """Changes weights of NN
-
+            
         Args:
             weights (list): Individual's weight
 
@@ -142,6 +145,7 @@ class EvolutionaryNeuronNetwork:
             "recall" : sklearn.metrics.recall_score(y_true=test_targets, y_pred=pred),
             'accuracy' : sklearn.metrics.accuracy_score(y_true=test_targets, y_pred=pred),
             'confusion_matrix' : sklearn.metrics.confusion_matrix(y_true=test_targets, y_pred=pred),
+            'hidden_layers' : tuple(self._nn.hidden_layer_sizes)
         }
 
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
@@ -194,7 +198,7 @@ class Evo_WeightSearch:
     """Main algorithm for searching weights in NN via evolution algorithms.
     """
     def __init__(self):
-        self._neuron_network = None
+        self._neuron_network :EvolutionaryNeuronNetwork = None
         # Define it here so we get no warnings.
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -270,12 +274,15 @@ class Evo_WeightSearch:
 
             _plot_stats(stats, plot_save_path+f'/Fit-{fitness:.3f}_layers-{hidden_layers}.png')
 
-            result.append((best_weights, fitness))
+            result.append((best_weights, fitness, hidden_layers))
 
         best_weights = sorted(result,key= lambda x : x[1], reverse=True)[0]
-
-        self._neuron_network.save_network(save_path=args.save_evo) 
-
+        
+        # save the best result
+        self._neuron_network = EvolutionaryNeuronNetwork(args, best_weights[2])
+        self._neuron_network.change_weights(best_weights[0])
+        
+        
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
 
         return self._neuron_network.validate_all()

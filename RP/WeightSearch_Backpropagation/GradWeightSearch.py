@@ -70,7 +70,6 @@ class Backprop_Weight_Search:
         newModel = sklearn.neural_network.MLPClassifier(**params)
         classes = np.unique(self._dataset.train_targets)
 
-
         train_accuracies = {
             'precision':  [],
             'recall':  [],
@@ -148,7 +147,7 @@ class Backprop_Weight_Search:
 
             plt.xlabel("Iterations")
             plt.ylabel("Accuracy")
-            plt.title(f"Data trained on {self._dataset.dataset_name} Validation on{dataset_name}")
+            plt.title(f"Data trained on {self._dataset.dataset_name} validation on {dataset_name} size {params['hidden_layer_sizes']}")
             plt.legend()
             plt.grid(True)
             plt.savefig(test_save_path)
@@ -203,6 +202,7 @@ class Backprop_Weight_Search:
             "recall" : sklearn.metrics.recall_score(y_true=test_targets, y_pred=pred),
             'accuracy' : sklearn.metrics.accuracy_score(y_true=test_targets, y_pred=pred),
             'confusion_matrix' : sklearn.metrics.confusion_matrix(y_true=test_targets, y_pred=pred),
+            'hidden_layers' : tuple(self.best_model.hidden_layer_sizes)
         }
     
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
