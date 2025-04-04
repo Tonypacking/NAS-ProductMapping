@@ -62,3 +62,4 @@ class Dataset:
             return None
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
+    
