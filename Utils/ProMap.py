@@ -79,22 +79,22 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
         return ProductsDatasets.__Split_data(path, "amazon_google")
-    @staticmethod
-    def __Split_data(path:str, dataset_name: str) -> Dataset:
-        """_summary_
-        Helper function to load and split the data into train and test data.
-        Args:
-            path (str): prefix path to the dataset
-            dataset_name (str): dataset name
+    # @staticmethod
+    # def __Split_data(path:str, dataset_name: str) -> Dataset:
+    #     """_summary_
+    #     Helper function to load and split the data into train and test data.
+    #     Args:
+    #         path (str): prefix path to the dataset
+    #         dataset_name (str): dataset name
 
-        Returns:
-            Dataset: train and test set
-        """
-        train_suffix = f"{dataset_name}-train_data_similarities.csv"
-        test_suffix = f"{dataset_name}-test_data_similarities.csv"
-        test_data = pd.read_csv(os.path.join(path, test_suffix))
-        train_data = pd.read_csv(os.path.join(path, train_suffix))
-        return Dataset(train_data, test_data, dataset_name)
+    #     Returns:
+    #         Dataset: train and test set
+    #     """
+    #     train_suffix = f"{dataset_name}-train_data_similarities.csv"
+    #     test_suffix = f"{dataset_name}-test_data_similarities.csv"
+    #     test_data = pd.read_csv(os.path.join(path, test_suffix))
+    #     train_data = pd.read_csv(os.path.join(path, train_suffix))
+    #     return Dataset(train_data, test_data, dataset_name)
     
     @staticmethod
     def Load_basic_amazon_google(path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
