@@ -16,9 +16,12 @@ import warnings
 import csv
 
 
-def log_statistics(save_path: str,train_dataset:str, method: str, statistics: list[tuple[str, dict[str, float]]], append = False):
+def log_statistics(save_path: str,train_dataset:str, method: str, statistics: list[tuple[str, dict[str, float]]], append = False, dimension_reduction = None):
     if not append:
-        header = ['Train dataset','Tested dataset', 'Method'] + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
+        header = ['Train dataset','Tested dataset', 'Method']
+        if dimension_reduction:
+            header.append('Dimension reduction')
+            header = header + [x for x in statistics[0][1].keys() if x != 'confusion_matrix']
     mode = 'w'
 
     if append: mode = 'a'
@@ -27,7 +30,10 @@ def log_statistics(save_path: str,train_dataset:str, method: str, statistics: li
         writer = csv.writer(file)
         if not append: writer.writerow(header)
         for test_data_name, score_dict in statistics:
-            writer.writerow([train_dataset,test_data_name, method] + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
+            x = [train_dataset,test_data_name, method]
+            if dimension_reduction:
+                x.append(dimension_reduction)
+            writer.writerow( x + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
 
 
@@ -62,15 +68,22 @@ def run_all(args: argparse, validation_path):
             bp_weight_search.run(iterations=args.iterations)
             bp_weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
             ws_output = bp_weight_search.validate_all()
-            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='backpropagation',append=append,statistics=ws_output)
+            
+            ws_weights =  bp_weight_search.best_model.coefs_
+            ws_biases = bp_weight_search.best_model.intercepts_
+
+            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='backpropagation',append=append,statistics=ws_output, dimension_reduction=dim_reduction)
             append = True
             # Evolutionary weight search
             eva_search = Evo_WeightSearch()
-
             eva_search.run(args, evo_path )
+
+            eva_weights = eva_search._neuron_network._nn.coefs_
+            eva_biases = eva_search._neuron_network._nn.intercepts_
+
+
             eva_output = eva_search.validate_all()
-            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='evolutionary',append=append,statistics=eva_output)
-            
+            log_statistics(save_path=validation_path,train_dataset= dataset_name, method='evolutionary',append=append,statistics=eva_output, dimension_reduction=dim_reduction)
 
 def main(args: argparse.Namespace):
 
