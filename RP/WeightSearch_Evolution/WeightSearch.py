@@ -163,12 +163,14 @@ class EvolutionaryNeuronNetwork:
             if dataset.feature_labels.shape != self._dataset.feature_labels.shape:   
                 
                 if self._dataset.feature_labels.shape[0] < dataset.feature_labels.shape[0]:
-                    print(f"train labels {self._dataset.feature_labels} testing labels {dataset.feature_labels}")
+                    print('Dataset features are different. Removing features from testing dataset')
+                   # print(f"train labels {self._dataset.feature_labels} testing labels {dataset.feature_labels}")
                     exceding_labels =  set(dataset.feature_labels) - set(self._dataset.feature_labels)
-                    print(f"exceeding labels which are missing in training data { exceding_labels}")
+                    #print(f"exceeding labels which are missing in training data { exceding_labels}")
                     dataset = ProductsDatasets.Load_by_name(name, remove_columns=exceding_labels)
-                    print(f" new labels {dataset.feature_labels}")
+                   # print(f" new labels {dataset.feature_labels}")
                 elif self._dataset.feature_labels.shape[0] > dataset.feature_labels.shape[0]:
+                    print('Dataset features are different. Adding features to testing dataset full of zeros')
                     dataset = ProductsDatasets.Load_by_name(name=name, match_columns=self._dataset)
 
 
@@ -290,8 +292,7 @@ class Evo_WeightSearch:
         # save the best result
         self._neuron_network = EvolutionaryNeuronNetwork(args, best_weights[2])
         self._neuron_network.change_weights(best_weights[0])
-        
-        
+           
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
 
         return self._neuron_network.validate_all()
