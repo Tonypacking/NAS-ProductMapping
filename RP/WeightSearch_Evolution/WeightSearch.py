@@ -169,7 +169,7 @@ class EvolutionaryNeuronNetwork:
             if self._transformer:
                 dataset.test_set = self._transformer.transform(dataset.test_set)
 
-            outputs.append((dataset.dataset_name, self.validate(dataset.test_set, dataset.test_targets)))
+            outputs.append((f'test_{dataset.dataset_name}', self.validate(dataset.test_set, dataset.test_targets)))
         return outputs
 
     def save_network(self, save_path: str):
