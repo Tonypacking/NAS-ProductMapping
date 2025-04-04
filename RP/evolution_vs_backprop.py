@@ -146,11 +146,8 @@ def parse_tuple_list(values: str) -> list[tuple[int]]:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     default_save_path = os.path.join(os.path.dirname(__file__), 'Output')
-    os.makedirs(name=default_save_path, exist_ok=True)
     evo_path = os.path.join(default_save_path, 'Evolutionary_search')
     backprop_path = os.path.join(default_save_path, 'Backpropagation_search')
-    os.makedirs(name=evo_path,exist_ok=True)
-    os.makedirs(name=backprop_path,exist_ok=True)
 
     # General options
     parser.add_argument('--seed', default=42, type=int, help='Sets a seed to random number generation.')
@@ -182,7 +179,12 @@ if __name__ == "__main__":
     # output arguments
     parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which data comparison is saved.')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
-    
+
+
     args = parser.parse_args()
+
+    os.makedirs(name=args.output, exist_ok=True)
+    os.makedirs(name=args.save_evo,exist_ok=True)
+    os.makedirs(name=args.save_back,exist_ok=True)
     main(args=args)
 
