@@ -81,7 +81,6 @@ def run_all(args: argparse, validation_path):
             eva_weights = eva_search._neuron_network._nn.coefs_
             eva_biases = eva_search._neuron_network._nn.intercepts_
 
-
             eva_output = eva_search.validate_all()
             log_statistics(save_path=validation_path,train_dataset= dataset_name, method='evolutionary',append=append,statistics=eva_output, dimension_reduction=dim_reduction)
 
