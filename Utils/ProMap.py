@@ -21,9 +21,8 @@ class ProductsDatasets:
         'amazonext' : 'promapmulti_amazon_ext',
     }
     
-
     @staticmethod
-    def Load_by_name(name : str) -> Dataset:
+    def Load_by_name(name : str, add_columns :list[str]|None = None, remove_columns : list[str]|None = None) -> Dataset:
         """Loads Product datasets based on shorter name.
 
         Args:
@@ -37,32 +36,30 @@ class ProductsDatasets:
         """
         match name:
             case 'google':
-                return ProductsDatasets.Load_basic_amazon_google()
+                return ProductsDatasets.Load_basic_amazon_google(remove_columns = remove_columns)
             case 'walmart' :
-                return ProductsDatasets.Load_basic_amazon_walmart()
+                return ProductsDatasets.Load_basic_amazon_walmart(remove_columns = remove_columns)
             case 'promapcz' :
-                return ProductsDatasets.Load_basic_promap_cz()
+                return ProductsDatasets.Load_basic_promap_cz(remove_columns = remove_columns)
             case 'promapen' :
-                return ProductsDatasets.Load_basic_promap_en()
+                return ProductsDatasets.Load_basic_promap_en(remove_columns = remove_columns)
             case 'promapczext' :
-                return ProductsDatasets.Load_extended_promap_cz()
+                return ProductsDatasets.Load_extended_promap_cz(remove_columns = remove_columns)
             case 'promapenext' :
-                return ProductsDatasets.Load_extended_promap_en()
+                return ProductsDatasets.Load_extended_promap_en(remove_columns = remove_columns)
             case 'amazonext':
-                return ProductsDatasets.Load_extended_amazon_walmart()
+                return ProductsDatasets.Load_extended_amazon_walmart(remove_columns = remove_columns)
             case _:
                 raise ValueError(f'Unknown dataset: {name}')
     
-        
     @staticmethod
-    def __Split_data(path:str, dataset_name: str) -> Dataset:
+    def __Split_data(path:str, dataset_name: str, remove_columns : list[str]) -> Dataset:
         """
         Helper function to load a dataset and split it into training and testing sets.
 
         Args:
             path (str): The base directory path where the dataset is stored.
             dataset_name (str): The name of the dataset to be loaded.
-            extend_to (str | None): Optional. Path to an additional dataset (e.g., 'promap') used to fill missing columns in the main dataset (`dataset_name`). Missing columns will be filled with zeros based on the `extend_to` dataset. If not provided, no columns will be added.
 
         Returns: Dataset wrapper with proper train and test sets 
         """
@@ -72,10 +69,14 @@ class ProductsDatasets:
         test_data = pd.read_csv(os.path.join(path, test_suffix))
         train_data = pd.read_csv(os.path.join(path, train_suffix))
 
+        if remove_columns:
+            test_data = test_data.drop(columns=remove_columns, errors='ignore')
+            train_data = train_data.drop(columns=remove_columns, errors='ignore')
+
         return Dataset(train_data, test_data, dataset_name)
      
     @staticmethod
-    def Load_basic_amazon_google(path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
+    def Load_basic_amazon_google(remove_columns : list[str] | None = None, path: str = os.path.join(_default_basic_path,"amazon-google")) -> Dataset:
         """Loads amazon google dataset
 
         Args:
@@ -85,10 +86,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "amazon_google")
+        return ProductsDatasets.__Split_data(path, "amazon_google", remove_columns=remove_columns)
     
     @staticmethod
-    def Load_basic_amazon_walmart(path:str = os.path.join(_default_basic_path, "amazon-walmart") ) -> Dataset:
+    def Load_basic_amazon_walmart(remove_columns : list[str] | None = None, path:str = os.path.join(_default_basic_path, "amazon-walmart") ) -> Dataset:
         """Loads amazon walmart dataset
 
         Args:
@@ -98,10 +99,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "amazon_walmart")
+        return ProductsDatasets.__Split_data(path, "amazon_walmart", remove_columns=remove_columns)
 
     @staticmethod
-    def Load_basic_promap_cz(path :str =  os.path.join(_default_basic_path,"ProMapCz")  ) -> Dataset:
+    def Load_basic_promap_cz(remove_columns : list[str] | None = None, path :str =  os.path.join(_default_basic_path,"ProMapCz")  ) -> Dataset:
         """Loads promap cz dataset
 
         Args:
@@ -111,10 +112,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "promapcz")
+        return ProductsDatasets.__Split_data(path, "promapcz", remove_columns=remove_columns)
 
     @staticmethod
-    def Load_basic_promap_en(path:str = os.path.join(_default_basic_path, "ProMapEn") ) -> Dataset:
+    def Load_basic_promap_en(remove_columns : list[str] | None = None,path:str = os.path.join(_default_basic_path, "ProMapEn") ) -> Dataset:
         """Loads promap en dataset
 
         Args:
@@ -124,10 +125,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "promapen")
+        return ProductsDatasets.__Split_data(path, "promapen", remove_columns=remove_columns)
 
     @staticmethod
-    def Load_extended_promap_cz(path: str = _default_extended_path) -> Dataset:
+    def Load_extended_promap_cz(remove_columns : list[str] | None = None, path: str = _default_extended_path) -> Dataset:
         """Loads extended promap cz  dataset
 
         Args:
@@ -137,10 +138,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "promapczext")
+        return ProductsDatasets.__Split_data(path, "promapczext", remove_columns=remove_columns)
 
     @staticmethod
-    def Load_extended_promap_en(path: str = _default_extended_path) -> Dataset:
+    def Load_extended_promap_en(remove_columns : list[str] | None = None, path: str = _default_extended_path) -> Dataset:
         """Loads extended promap en  dataset
 
         Args:
@@ -150,10 +151,10 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "promapenext")
+        return ProductsDatasets.__Split_data(path, "promapenext", remove_columns=remove_columns)
     
     @staticmethod
-    def Load_extended_amazon_walmart(path: str = _default_extended_path) -> Dataset:
+    def Load_extended_amazon_walmart(remove_columns : list[str] | None = None, path: str = _default_extended_path) -> Dataset:
         """Loads extended amazon walmart dataset
 
         Args:
@@ -163,6 +164,5 @@ class ProductsDatasets:
             Dataset: Dataset encapsulation.
         """
 
-        return ProductsDatasets.__Split_data(path, "promapmulti_amazon_ext")
-    
+        return ProductsDatasets.__Split_data(path, "promapmulti_amazon_ext", remove_columns=remove_columns)
     

@@ -157,11 +157,20 @@ class EvolutionaryNeuronNetwork:
 
         outputs = []
         for name in ProductsDatasets.NAME_MAP:
+
             dataset= ProductsDatasets.Load_by_name(name)
 
             if dataset.feature_labels.shape != self._dataset.feature_labels.shape:   
                 print(f'Datasets features are different, cannot transform them\nTested dataset name: {dataset.dataset_name} of shape {dataset.feature_labels.shape}\nTrained on {self._dataset.dataset_name} of shape {self._dataset.feature_labels.shape}')
-                continue
+                
+                if self._dataset.feature_labels.shape[0] < dataset.feature_labels.shape[0]:
+                    print(f"train labels {self._dataset.feature_labels} testing labels {dataset.feature_labels}")
+                    exceding_labels =  set(dataset.feature_labels) - set(self._dataset.feature_labels)
+                    print(f"exceeding labels which are missing in training data { exceding_labels}")
+                    dataset = ProductsDatasets.Load_by_name(name, remove_columns=exceding_labels)
+                    print(f" new labels {dataset.feature_labels}")
+                else :
+                    raise NotImplemented()
 
             if self._scaler:
                 dataset.test_set = self._scaler.transform(dataset.test_set)

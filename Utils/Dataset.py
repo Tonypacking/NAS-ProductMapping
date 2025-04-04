@@ -63,3 +63,8 @@ class Dataset:
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
     
+    def reduce_features(self, other_dataset: 'Dataset'):
+        pass
+
+    def add_features(self, other_dataset: 'Dataset'):
+        pass
