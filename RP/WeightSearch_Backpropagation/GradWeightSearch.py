@@ -218,15 +218,16 @@ class Backprop_Weight_Search:
 
             if dataset.feature_labels.shape != self._dataset.feature_labels.shape:   
                 print(f'Datasets features are different, cannot transform them\nTested dataset name: {dataset.dataset_name} of shape {dataset.feature_labels.shape}\nTrained on {self._dataset.dataset_name} of shape {self._dataset.feature_labels.shape}')
-                
-                if self._dataset.feature_labels.shape[0] < dataset.feature_labels.shape[0]:
+
+                if self._dataset.feature_labels.shape[0] < dataset.feature_labels.shape[0]: # testing dataset has more features than trainint dataset, remove exceeding columns
+
                     print(f"train labels {self._dataset.feature_labels} testing labels {dataset.feature_labels}")
                     exceding_labels =  set(dataset.feature_labels) - set(self._dataset.feature_labels)
                     print(f"exceeding labels which are missing in training data { exceding_labels}")
                     dataset = ProductsDatasets.Load_by_name(name, remove_columns=exceding_labels)
                     print(f" new labels {dataset.feature_labels}")
-                else :
-                    raise NotImplemented()
+                else : # testin dataset has less features than training dataset, add more zero columns
+                    dataset = ProductsDatasets.Load_by_name(name=name, match_columns=self._dataset)
 
 
             if self._scaler:
