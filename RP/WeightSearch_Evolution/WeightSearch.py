@@ -279,12 +279,12 @@ class Evo_WeightSearch:
 
         result = []
 
-        for hidden_layers in args.hidden_layers:
+        for hidden_layers in set(args.hidden_layers):
             best_weights, stats = _evolve(args, hidden_layers)
             fitness = self._fitness(self._neuron_network, individual= best_weights)[0]
 
-            _plot_stats(stats, plot_save_path+f'/Fit-{fitness:.3f}_layers-{hidden_layers}.png')
-
+            _plot_stats(stats, plot_save_path+f'/Layers-{hidden_layers}.png')
+                
             result.append((best_weights, fitness, hidden_layers))
 
         best_weights = sorted(result,key= lambda x : x[1], reverse=True)[0]
