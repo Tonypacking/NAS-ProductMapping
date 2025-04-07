@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # output arguments
     parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which models validaitons are stored.')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
-    parser.add_argument('--analyze', '--a', default=False, action='store_True', help='Analyze the results of the evolutionary search and backpropagation search without running the search again')
+    parser.add_argument('--analyze', '--a', default=False, action='store_true', help='Analyze the results of the evolutionary search and backpropagation search without running the search again')
 
     args = parser.parse_args()
     
