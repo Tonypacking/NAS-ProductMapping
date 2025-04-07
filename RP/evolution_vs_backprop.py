@@ -14,7 +14,7 @@ import sys
 import sklearn
 import warnings
 import csv
-
+from analyze_predictions import Analyzer
 
 def log_statistics(save_path: str,train_dataset:str, method: str, statistics: list[tuple[str, dict[str, float]]], append = False, dimension_reduction = None):
     if not append:
@@ -100,12 +100,16 @@ def main(args: argparse.Namespace):
     grad_search.run(args.iterations, seed = args.seed, parallel=True)
     grad_statistics = grad_search.validate_all()
     grad_search.plot_bestmodel_accuracy_progress(args.save_back)
-    log_statistics(validation_output,args.dataset,'Backpropagation', grad_statistics, append=False)
+    log_statistics(save_path=validation_output,train_dataset=args.dataset,method='Backpropagation', statistics=grad_statistics, append=False, dimension_reduction=args.dimension_reduction)
 
     eva_search = Evo_WeightSearch()
     eva_search.run(args, args.save_evo)
     eva_statistics = eva_search._neuron_network.validate_all()
-    log_statistics(validation_output, args.dataset, 'Evolutionary',eva_statistics, append=True)
+    log_statistics(save_path=validation_output,train_dataset=args.dataset,method='Evolutionary', statistics=eva_statistics, append=True, dimension_reduction=args.dimension_reduction)
+
+
+
+
 
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
@@ -174,14 +178,21 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=ProductsDatasets.NAME_MAP.keys(), help='name of promap dataset or path')
 
     # output arguments
-    parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which data comparison is saved.')
+    parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which models validaitons are stored.')
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
-
+    parser.add_argument('--analyze', '--a', default=False, action='store_True', help='Analyze the results of the evolutionary search and backpropagation search without running the search again')
 
     args = parser.parse_args()
-
-    os.makedirs(name=args.output, exist_ok=True)
-    os.makedirs(name=args.save_evo,exist_ok=True)
-    os.makedirs(name=args.save_back,exist_ok=True)
-    main(args=args)
-
+    
+    if not args.analyze:
+        os.makedirs(name=args.output, exist_ok=True)
+        os.makedirs(name=args.save_evo,exist_ok=True)
+        os.makedirs(name=args.save_back,exist_ok=True)  
+        main(args=args)
+    
+    analyze_path = args.output+'/validation_predictions.csv'
+    if not os.path.exists(analyze_path):
+        raise FileNotFoundError(f"File {analyze_path} does not exist. Please run the script with --analyze argument.")
+    
+    analyzator = Analyzer(analyze_path, args.save_evo, args.save_back)
+    analyzator.analyze(args.output)
