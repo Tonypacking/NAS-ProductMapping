@@ -35,8 +35,6 @@ def log_statistics(save_path: str,train_dataset:str, method: str, statistics: li
                 x.append(dimension_reduction)
             writer.writerow( x + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
-
-
 def run_all(args: argparse, validation_path):
     if args.run_all == 'all':
         dims = ['raw', 'lda', 'pca']

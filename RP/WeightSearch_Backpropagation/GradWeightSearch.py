@@ -229,7 +229,6 @@ class Backprop_Weight_Search:
                     print('Dataset features are different. Adding features to testing dataset full of zeros')
                     dataset = ProductsDatasets.Load_by_name(name=name, match_columns=self._dataset)
 
-
             if self._scaler:
                 dataset.test_set = self._scaler.transform(dataset.test_set)
                 
