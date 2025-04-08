@@ -1,0 +1,1 @@
+--all all --output Simple --se Simple/evolutionary --sb Simple/backpropagation --iter 10 --gen 10
