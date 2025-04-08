@@ -213,7 +213,8 @@ class Evo_WeightSearch:
         # Define it here so we get no warnings.
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
-
+        # If nn are huge and have lots of parameters, evo search would be slow
+        self.MAX_POPULATION_SIZE = 1_000
     @staticmethod
     def _fitness(network: EvolutionaryNeuronNetwork, individual: list) -> tuple[float]:
         """FItness function of evolutionary algorithm.
@@ -245,8 +246,14 @@ class Evo_WeightSearch:
             toolbox.register("select", tools.selTournament, tournsize=3)
             
             toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
-
-            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5 )#, lambda_= 2 * self._neuron_network.n_parameters)
+            print(self._neuron_network.n_parameters)
+            parameters = self._neuron_network.n_parameters
+            # Individual and population size is too large and it would take too long to evolve so reduce population size.
+            if self._neuron_network.n_parameters > self.MAX_POPULATION_SIZE:
+                parameters = 500
+                print('Individual size is too large. Reducing population to 500')
+            
+            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5, lambda_ = parameters )
             toolbox.register("generate", strategy.generate, creator.Individual)
             toolbox.register("update", strategy.update)
 
