@@ -76,6 +76,14 @@ class Evolution:
 
             with open(config_path, 'w') as f:
                 parser.write(f)
+        else: #
+            num_features = self._dataset.train_set.shape[1]
+            parser = configparser.ConfigParser()
+            parser.read(config_path)
+            parser.set('DefaultGenome', 'num_inputs', str(num_features))
+
+            with open(config_path, 'w') as f:
+                parser.write(f)
 
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
 
@@ -94,6 +102,7 @@ class Evolution:
         population.add_reporter(neat.StdOutReporter(show_species_detail=True))
         self._statistics = neat.StatisticsReporter()
         population.add_reporter(self._statistics)
+        
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
 
@@ -149,8 +158,10 @@ class Evolution:
                 # print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
 
             elif tested_dataset.feature_labels.shape > self._dataset.feature_labels.shape:
+                # print(tested_dataset.feature_labels.shape, self._dataset.test_set.shape, tested_dataset.train_set.shape)
                 tested_dataset.reduce_dataset(self._dataset)
-                
+                # print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape, tested_dataset.train_set.shape)
+
             if self._scaler:
                 tested_dataset.test_set = self._scaler.transform(tested_dataset.test_set)
                 
