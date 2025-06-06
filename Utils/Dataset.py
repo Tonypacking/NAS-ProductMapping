@@ -90,14 +90,12 @@ class Dataset:
         self.test_set = zero_test_set
         self.feature_labels = larger_dataset.feature_labels.copy(deep=True)
         
-    
     def reduce_dataset(self, smaller_dataset: 'Dataset') -> None:
         """
         Reduces current dataset with another dataset. 
         Removes features that aren't present in the smaller dataset.
         """
         present_feature_mask = np.isin(self.feature_labels, smaller_dataset.feature_labels)
-        present_feature_mask = ~present_feature_mask
 
         self.feature_labels = self.feature_labels[present_feature_mask]
         self.train_set = self.train_set[:, present_feature_mask]

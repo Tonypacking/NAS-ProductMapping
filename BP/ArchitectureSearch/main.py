@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import random
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
+
 def Generate_configs(config_directory : str, input_path: str,method:str,  generate : bool = True, add_defaul : bool = True) : 
     """Helper function to generate config files.
 
@@ -61,7 +62,8 @@ def Neat_Nas(args: argparse.Namespace):
         args (argparse.Namespace): User's arguments.
     """
     generated_configs = Generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default, method=NEAT_METHOD)
-    
+    # print(f"Generated configs: {generated_configs}")
+
     if args.all_files:
         configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.SUFFIX)]
     else:
@@ -89,8 +91,9 @@ def Neat_Nas(args: argparse.Namespace):
 
         if not os.path.isdir(output_path):
             os.makedirs(output_path, exist_ok=True)
-        evolution.run(args.iterations, args.parallel)
 
+        evolution.run(args.iterations, args.parallel)
+        
         if args.validate_all:
             outputs = evolution.validate_all()
         else:
