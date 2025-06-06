@@ -15,6 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..
 from Utils.Dataset import Dataset
 import Utils.visualize as visualize
 import Utils.ProMap as ProMap
+
 class Evolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
@@ -140,19 +141,23 @@ class Evolution:
         """
         outputs = []
         for name in ProMap.ProductsDatasets.NAME_MAP:
-            dataset= ProMap.ProductsDatasets.Load_by_name(name)
+            tested_dataset= ProMap.ProductsDatasets.Load_by_name(name)
 
-            if dataset.feature_labels.shape != self._dataset.feature_labels.shape:
-                print(f'Datasets features are different, cannot transform them\nTested dataset name: {dataset.dataset_name} of shape {dataset.feature_labels.shape}\nTrained on {self._dataset.dataset_name} of shape {self._dataset.feature_labels.shape}')
-                continue
+            if tested_dataset.feature_labels.shape < self._dataset.feature_labels.shape:
+                #print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
+                tested_dataset.extend_dataset(self._dataset)
+                # print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
 
+            elif tested_dataset.feature_labels.shape > self._dataset.feature_labels.shape:
+                tested_dataset.reduce_dataset(self._dataset)
+                
             if self._scaler:
-                dataset.test_set = self._scaler.transform(dataset.test_set)
+                tested_dataset.test_set = self._scaler.transform(tested_dataset.test_set)
                 
             if self._transformer:
-                dataset.test_set = self._transformer.transform(dataset.test_set)
+                tested_dataset.test_set = self._transformer.transform(tested_dataset.test_set)
 
-            outputs.append((dataset.dataset_name, self.validate(dataset.test_set, dataset.test_targets)))
+            outputs.append(("TestDataset: "+tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
         return outputs
     
     def plot_network(self, save_path :str, view = False ):
