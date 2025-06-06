@@ -13,8 +13,9 @@ import numpy as np
 import sklearn 
 import matplotlib.pyplot as plt
 import random
-
-def generate_configs(config_directory : str, input_path: str,  generate : bool = True, add_defaul : bool = True) : 
+NEAT_METHOD = 'BasicNEAT'
+ALL = 'all'
+def Generate_configs(config_directory : str, input_path: str,method:str,  generate : bool = True, add_defaul : bool = True) : 
     """Helper function to generate config files.
 
     Args:
@@ -30,7 +31,7 @@ def generate_configs(config_directory : str, input_path: str,  generate : bool =
         return
 
     parser = NeatConfigParser.NeatConfigParser(config_directory)
-    return parser.createConfig(input=input_path,add_default_values=add_defaul)
+    return parser.CreateNeatConfig(input=input_path,add_default_values=add_defaul, method=method)
 
 
 def main(args: argparse.Namespace):
@@ -41,10 +42,25 @@ def main(args: argparse.Namespace):
     """
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
+    if args.NAS_method == NEAT_METHOD or ALL:
+        Neat_Nas(args=args)
 
+def Neat_Nas(args: argparse.Namespace):
+    """Runs neuron architecture search using NEAT.
 
-
-    generated_configs = generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default)
+    1. Generates configs if config_generation is set to True.
+        2. Loads dataset specified by dataset argument.
+        3. Runs NEAT for each config.
+        4. Validates each config against dataset specified by validate_all argument.
+        5. Saves validation results in output directory.
+        6. Saves best networks in output directory.
+    7. Plots best network and statistics.
+    8. Saves best networks in a separate directory.
+    9. Prints k best networks based on f1_score.
+    Args:
+        args (argparse.Namespace): User's arguments.
+    """
+    generated_configs = Generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default, method=NEAT_METHOD)
     
     if args.all_files:
         configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.SUFFIX)]
@@ -73,7 +89,6 @@ def main(args: argparse.Namespace):
 
         if not os.path.isdir(output_path):
             os.makedirs(output_path, exist_ok=True)
-
         evolution.run(args.iterations, args.parallel)
 
         if args.validate_all:
@@ -116,7 +131,11 @@ def main(args: argparse.Namespace):
         for rank, (value, path) in enumerate(best_networks[: args.kbest], start=1):
             f.write(f"Rank: {rank} with f1_score: {value}.   Attributes: {path}\n")
 
-    print(best_networks[:args.kbest])
+    # print(best_networks[:args.kbest])
+
+    print(f'For training dataset:{evolution.dataset_name}')
+    for accuracy, dataset_name in best_networks[:args.kbest]:
+        print(f"Best network for {dataset_name} has : {accuracy}")
     
     
 if __name__ == "__main__":
@@ -148,5 +167,8 @@ if __name__ == "__main__":
     parser.add_argument('--default','--def', action='store_false', default=True, help='Disables default value generations in config.' )
     parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all ini files in config directory set by config_directory argument. ')
     
+    parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=[ALL,NEAT_METHOD, 'hyperneat'], help='Selects the method of NAS.')
+
+
     main(parser.parse_args())
 

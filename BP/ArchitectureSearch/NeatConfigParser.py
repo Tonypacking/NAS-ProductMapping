@@ -145,7 +145,7 @@ class NeatConfigParser:
         with open(input) as file:
             return json.load(file)
         
-    def createConfig(self, input: str, add_default_values: bool = True) -> list[str]:
+    def CreateNeatConfig(self, input: str, method, add_default_values: bool = True) -> list[str]:
         """_summary_
         Creates neat config with all possible value combinations specified in the dictionary. Works similary as a grid search in sklearn.
         Args:
@@ -155,7 +155,7 @@ class NeatConfigParser:
         Returns:
             list[str]: List of config names
         """
-        input_config = self._parse_input(input)
+        input_config = self._parse_input(input)[method]
 
         values = self._get_values(input_config)
         keys = self._get_keys(input_config)
