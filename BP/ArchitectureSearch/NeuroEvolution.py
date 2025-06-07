@@ -144,6 +144,7 @@ class Evolution:
 
     def validate_all(self) -> list[tuple[str, dict[str, float]]]:
         """Validates against all promap datasets if feature count is the same.
+        Resises the testing dataset to match the training dataset's feature columns.
 
         Returns:
             list[tuple[str, dict[str, float]]]: List of tuples with name of tested dataset and dictionary of metric and metrics value.
