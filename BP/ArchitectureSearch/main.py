@@ -21,7 +21,7 @@ ALL = 'all'
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
-CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
+CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -45,7 +45,6 @@ def Generate_configs(config_directory : str, input_path: str,method:str,  genera
     parser = NeatConfigParser.NeatConfigParser(config_directory)
     return parser.CreateNeatConfig(input=input_path,add_default_values=add_defaul, method=method)
 
-
 def main(args: argparse.Namespace):
     """Main function in which neuron architecture search runs.
 
@@ -67,7 +66,7 @@ def main(args: argparse.Namespace):
             logger.info(f"Running NEAT for dataset: {dataset}")
             Neat_Nas(args=args)
             logger.info(f"Finished NEAT for dataset: {dataset}")
-            
+
         if args.NAS_method == 'hyperneat' or ALL:
             pass
 
@@ -182,7 +181,8 @@ def Neat_Nas(args: argparse.Namespace):
                 os.makedirs(confusion_matrix_path, exist_ok=True) 
             for dataset_name, output in outputs:
                 # Save to local results
-                row = [data.dataset_name, dataset_name,NEAT_METHOD,folder_name, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+
+                row = [data.dataset_name, dataset_name,args.scale,args.dimension_reduction,NEAT_METHOD,folder_name, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
                 csw_writer.writerow(row)
                 # Save results to global results too
                 Write_Global_Result(args, row)
@@ -209,10 +209,11 @@ def Neat_Nas(args: argparse.Namespace):
             f.write(f"Rank: {rank} with f1_score: {value}.   Attributes: {path}\n")
 
     # print(best_networks[:args.kbest])
+    logger.info(f"Best networks for training dataset: {evolution.dataset_name}")
 
-    print(f'For training dataset:{evolution.dataset_name}')
     for accuracy, dataset_name in best_networks[:args.kbest]:
-        print(f"Best network for {dataset_name} has : {accuracy}")
+        logger.info(f"Best network for {dataset_name} has : {accuracy}")
+
     
     
 if __name__ == "__main__":

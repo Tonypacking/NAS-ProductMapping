@@ -15,6 +15,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..
 from Utils.Dataset import Dataset
 import Utils.visualize as visualize
 import Utils.ProMap as ProMap
+import logging
+
 
 class Evolution:
     
@@ -111,7 +113,8 @@ class Evolution:
             self._winner = population.run(self._eval_genomes, iterations)
 
         self.Best_network = neat.nn.FeedForwardNetwork.create(self._winner, self._neat_config)
-        print(f"Winner {self._winner}")
+        # TODO: add logging winner
+        #print(f"Winner {self._winner}")
         return self.Best_network
     
     def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
