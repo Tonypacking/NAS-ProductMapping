@@ -25,7 +25,8 @@ class Dataset:
         self.test_set = testing_data.drop(self.ids, axis=1).iloc[:, :-1].values # drop id1 and id2, becase we don't need product ids (URLs) for classifier
         self.test_targets = testing_data.iloc[:, -1].values
         self.testing_product_ids = testing_data[self.ids].values
-        
+
+
     def scale_features(self) -> StandardScaler:
         """
         Standardize features via sklearn.preprocessing.StandardScaler
@@ -58,7 +59,6 @@ class Dataset:
             self.test_set = pca.transform(self.test_set)
             return pca
         elif method.lower() == 'raw':
-            # No dimension reduction
             return None
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
@@ -73,9 +73,10 @@ class Dataset:
         present_features = ~present_features
         missing_indexes = np.where(present_features)[0]
 
+        extend_to_colomns = larger_dataset.feature_labels.shape[-1]
         # create new train and test data
-        zero_train_set = np.zeros(shape=(self.train_set.shape[0], larger_dataset.train_set.shape[1]))
-        zero_test_set = np.zeros(shape=(self.test_set.shape[0], larger_dataset.train_set.shape[1]))
+        zero_train_set = np.zeros(shape=(self.train_set.shape[0], extend_to_colomns))
+        zero_test_set = np.zeros(shape=(self.test_set.shape[0], extend_to_colomns))
         skipped_index = 0
 
         for index in range(larger_dataset.train_set.shape[1]):
