@@ -15,14 +15,20 @@ import sklearn
 import matplotlib.pyplot as plt
 import random
 import logging
+# TODO import hyperNEAT and ES hyperNEAT
+
 
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
+HYPERNEAT_METHOD = 'HyperNEAT'
+
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
+
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -41,7 +47,7 @@ def Generate_configs(config_directory : str, input_path: str,method:str,  genera
     """
     if not generate:
         return
-
+    logger.info(f"Generating configs in {config_directory} from {input_path} with method {method}.")
     parser = NeatConfigParser.NeatConfigParser(config_directory)
     return parser.CreateNeatConfig(input=input_path,add_default_values=add_defaul, method=method)
 
@@ -53,22 +59,29 @@ def main(args: argparse.Namespace):
     """
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
-    if args.dataset == 'all':
+    logger.info(f"Running Neuron Architecture Search with arguments: {args}")
+
+    if args.dataset == ALL:
         available_datasets = list(ProductsDatasets.NAME_MAP.keys())
     else:
         available_datasets = [args.dataset]
     
     for dataset in available_datasets:
+        #HACK: Instead of passing dataset to all methods, change it globaly here.
+
         args.dataset = dataset
         logger.info(f"Running Neuron Architecture Search for dataset: {dataset}")
-
-        if args.NAS_method == NEAT_METHOD or ALL:
+        # TODO add more NAS methods like random search, DARTS and RL based NAS
+        if args.NAS_method == NEAT_METHOD or args.NAS_method == ALL:
             logger.info(f"Running NEAT for dataset: {dataset}")
             Neat_Nas(args=args)
             logger.info(f"Finished NEAT for dataset: {dataset}")
 
-        if args.NAS_method == 'hyperneat' or ALL:
-            pass
+        if args.NAS_method == HYPERNEAT_METHOD or args.NAS_method == ALL:
+            logger.info(f"Running HyperNEAT for dataset: {dataset}")
+            HyperNeatNas(args=args)
+            logger.info(f"Finished HyperNEAT for dataset: {dataset}")
+
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
     """Writes global resutls to a args.output/global_results.csv file.
@@ -86,7 +99,8 @@ def Write_Global_Result(args: argparse.Namespace, row : list):
         return
 
     path = os.path.join(args.output, GLOBAL_FILE)
-    if not os.path.exists(path) or args.remove_global_results:
+    # check if file doesnt exist or remove global is set or there isnt any data
+    if not os.path.exists(path) or args.remove_global_results or os.path.getsize(path) == 0:
         # result were cleared 
         args.remove_global_results = False
         with open(path, mode='w') as f:
@@ -133,14 +147,13 @@ def Neat_Nas(args: argparse.Namespace):
     # print(f"Generated configs: {generated_configs}")
 
     if args.all_files:
-        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.SUFFIX)]
+        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
     else:
         configs = generated_configs
 
     best_networks = []
     for config in configs:
         # load training dataset
-        # TODO if args.dataset is all then run for all datasets
 
         data = ProductsDatasets.Load_by_name(args.dataset)
         # create output path directory -  args.output/NEAT
@@ -148,10 +161,10 @@ def Neat_Nas(args: argparse.Namespace):
         if not os.path.isdir(neat_dir):
             os.makedirs(neat_dir,exist_ok=True)
 
-        evolution = NeuroEvolution.Evolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+        evolution = NeuroEvolution.NEATEvolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract used parameters and save it as a folder name in which we will save our results.
-        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.SUFFIX)]
+        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
         used_preprocessing = '_'
 
         if args.scale:
@@ -164,7 +177,7 @@ def Neat_Nas(args: argparse.Namespace):
         if not os.path.isdir(output_path):
             os.makedirs(output_path, exist_ok=True)
 
-        evolution.run(args.iterations, args.parallel)
+        evolution.RunNEAT(args.iterations, args.parallel)
 
         if args.validate_all:
             outputs = evolution.validate_all()
@@ -214,8 +227,78 @@ def Neat_Nas(args: argparse.Namespace):
     for accuracy, dataset_name in best_networks[:args.kbest]:
         logger.info(f"Best network for {dataset_name} has : {accuracy}")
 
+def HyperNeatNas(args: argparse.Namespace):
+    """Runs neuron architecture search using HyperNEAT.
+    Args:
+        args (argparse.Namespace): User's arguments.
+    """
+    #TODO
+    #     create HyperNeat directory
+    #     Run HyperNEAT
+    if args.all_files:
+        configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.HYPERNEAT_SUFFIX)]
+    else:
+        configs = Generate_configs(config_directory=args.config_directory, input_path=args.input, generate=args.config_generation, add_defaul=args.default, method=HYPERNEAT_METHOD)
+    best_networks = []
     
-    
+    for config in configs:
+        data = ProductsDatasets.Load_by_name(args.dataset)
+        hyperNEAT_dir = os.path.join(args.output, HYPERNEAT_DIRECTORY)
+        if not os.path.isdir(hyperNEAT_dir):
+            os.makedirs(hyperNEAT_dir,exist_ok=True)
+        
+        evolution = NeuroEvolution.NEATEvolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+
+
+        # extract used parameters and save it as a folder name in which we will save our results.
+        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.HYPERNEAT_SUFFIX)]
+        used_preprocessing = '_'
+
+        if args.scale:
+            used_preprocessing += 'Standard_Scaling_'
+
+        used_preprocessing += args.dimension_reduction
+
+        output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
+        evolution.RunNEAT(args.iterations, args.parallel)
+
+        if args.validate_all:
+            outputs = evolution.validate_all()
+        else:
+            outputs = [(evolution.dataset_name, evolution.validate())]
+
+
+        if not os.path.isdir(output_path):
+            os.makedirs(output_path, exist_ok=True)
+        with open(os.path.join(output_path, f'{folder_name}_local_scores.csv'), mode='w') as f:
+            # Create csv writer and write header
+            csw_writer = csv.writer(f)
+            csw_writer.writerow(CSV_HEADER)   
+
+            confusion_matrix_path = os.path.join(output_path, 'confusion_matrices')
+            if not os.path.isdir(confusion_matrix_path):
+                os.makedirs(confusion_matrix_path, exist_ok=True) 
+
+            for dataset_name, output in outputs:
+                # Save to local results
+
+                row = [data.dataset_name, dataset_name,args.scale,args.dimension_reduction,HYPERNEAT_METHOD,folder_name, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+                csw_writer.writerow(row)
+                # Save results to global results too
+                Write_Global_Result(args, row)
+
+                Plot_Confusion_Matrix(output['confusion_matrix'], confusion_matrix_path, evolution.dataset_name, dataset_name)
+                # save network to the best network
+                best_networks.append((output['f1_score'], dataset_name+used_preprocessing+'_'+folder_name))
+        # Plot NN statistics and network
+        evolution.plot_network(os.path.join(output_path,'BestNetwork'))
+        evolution.plot_statistics(os.path.join(output_path,'Statistics'))
+
+        with open(os.path.join(output_path,'best_network'), 'wb') as f:
+            if evolution.Best_network is not None:
+                pickle.dump(evolution.Best_network,f)
+
+
 if __name__ == "__main__":
 
     logging.basicConfig(
@@ -232,6 +315,10 @@ if __name__ == "__main__":
     # Neat arguments
     parser.add_argument('--parallel', '--par',  action='store_true', default=False, help="Runs Neat in parallel.",)
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in neat')
+
+    # HyperNEAT arguments
+    parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
+
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
@@ -253,7 +340,7 @@ if __name__ == "__main__":
     parser.add_argument('--default','--def', action='store_false', default=True, help='Disables default value generations in config.' )
     parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all .neat (.ini) files in config directory set by config_directory argument. ')
     
-    parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=[ALL,NEAT_METHOD, 'hyperneat'], help='Selects the method of NAS.')
+    parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=[ALL,NEAT_METHOD, HYPERNEAT_METHOD], help='Selects the method of NAS.')
 
     main(parser.parse_args())
 
