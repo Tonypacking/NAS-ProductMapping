@@ -89,7 +89,7 @@ class Evolution:
 
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
 
-    def run(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
+    def RunNEAT(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
         """Runs the fining algorithm using neat.
 
         Args:
