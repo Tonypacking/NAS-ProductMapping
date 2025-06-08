@@ -6,8 +6,8 @@ import neat
 import numpy as np
 # from pureples.hyperneat.hyperneat import create_phenotype_network
 # from pureples.es_hyperneat.es_hyperneat import ESNetwork
-from hyperneat import create_phenotype_network
-from es_hyperneat import ESNetwork
+from HyperNEAT.hyperneat.hyperneat import create_phenotype_network
+from HyperNEAT.es_hyperneat.es_hyperneat import ESNetwork
 
 def ini_pop(state, stats, config, output):
     """
