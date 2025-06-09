@@ -79,7 +79,7 @@ def main(args: argparse.Namespace):
 
         if args.NAS_method == HYPERNEAT_METHOD or args.NAS_method == ALL:
             logger.info(f"Running HyperNEAT for dataset: {dataset}")
-            HyperNeatNas(args=args)
+            EsHyperNeatNas(args=args)
             logger.info(f"Finished HyperNEAT for dataset: {dataset}")
 
 
@@ -227,14 +227,11 @@ def Neat_Nas(args: argparse.Namespace):
     for accuracy, dataset_name in best_networks[:args.kbest]:
         logger.info(f"Best network for {dataset_name} has : {accuracy}")
 
-def HyperNeatNas(args: argparse.Namespace):
+def EsHyperNeatNas(args: argparse.Namespace):
     """Runs neuron architecture search using HyperNEAT.
     Args:
         args (argparse.Namespace): User's arguments.
     """
-    #TODO
-    #     create HyperNeat directory
-    #     Run HyperNEAT
     if args.all_files:
         configs = [x.name for x in os.scandir(args.config_directory) if x.name.endswith(NeatConfigParser.NeatConfigParser.HYPERNEAT_SUFFIX)]
     else:
@@ -247,8 +244,7 @@ def HyperNeatNas(args: argparse.Namespace):
         if not os.path.isdir(hyperNEAT_dir):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
-        evolution = NeuroEvolution.NEATEvolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
-
+        evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract used parameters and save it as a folder name in which we will save our results.
         folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.HYPERNEAT_SUFFIX)]
@@ -260,7 +256,7 @@ def HyperNeatNas(args: argparse.Namespace):
         used_preprocessing += args.dimension_reduction
 
         output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
-        evolution.RunNEAT(args.iterations, args.parallel)
+        evolution.RunHyperNEAT(args.iterations, args.parallel)
 
         if args.validate_all:
             outputs = evolution.validate_all()
@@ -270,6 +266,7 @@ def HyperNeatNas(args: argparse.Namespace):
 
         if not os.path.isdir(output_path):
             os.makedirs(output_path, exist_ok=True)
+
         with open(os.path.join(output_path, f'{folder_name}_local_scores.csv'), mode='w') as f:
             # Create csv writer and write header
             csw_writer = csv.writer(f)
@@ -290,13 +287,17 @@ def HyperNeatNas(args: argparse.Namespace):
                 Plot_Confusion_Matrix(output['confusion_matrix'], confusion_matrix_path, evolution.dataset_name, dataset_name)
                 # save network to the best network
                 best_networks.append((output['f1_score'], dataset_name+used_preprocessing+'_'+folder_name))
-        # Plot NN statistics and network
-        evolution.plot_network(os.path.join(output_path,'BestNetwork'))
-        evolution.plot_statistics(os.path.join(output_path,'Statistics'))
 
-        with open(os.path.join(output_path,'best_network'), 'wb') as f:
-            if evolution.Best_network is not None:
-                pickle.dump(evolution.Best_network,f)
+        # Plot NN statistics and network
+
+
+        #evolution.plot_network(os.path.join(output_path,'BestNetwork'))
+        evolution.plot_statistics(os.path.join(output_path,'Statistics'))
+        evolution.plot_CPPN_network(os.path.join(output_path,'CPPN'))
+        evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
+       #  with open(os.path.join(output_path,'best_network'), 'wb') as f:
+          #   if evolution.Best_network is not None:
+            #    pickle.dump(evolution.Best_network,f)
 
 
 if __name__ == "__main__":
@@ -325,7 +326,7 @@ if __name__ == "__main__":
     parser.add_argument('--scale', '--s',default=False, action='store_true', help="Standardize data")
     
     # dataset arguments
-    available_datasets = list(ProductsDatasets.NAME_MAP.keys()) + ['all']
+    available_datasets = list(ProductsDatasets.NAME_MAP.keys()) + [ALL]
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=available_datasets, help='name of promap dataset or path')
     # output arguments
     logger.debug(f"{available_datasets}")
