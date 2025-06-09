@@ -20,6 +20,10 @@ import HyperNEAT.es_hyperneat
 from HyperNEAT.shared import Substrate
 from HyperNEAT.es_hyperneat import ESNetwork
 from HyperNEAT.shared import draw_net, draw_es
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
 class NEATEvolution:
     
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
@@ -160,9 +164,9 @@ class NEATEvolution:
 
             if tested_dataset.feature_labels.shape < self._dataset.feature_labels.shape:
                 #print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
-                print(tested_dataset.test_set.shape)
+               # print(tested_dataset.test_set.shape)
                 tested_dataset.extend_dataset(self._dataset)
-                print(tested_dataset.test_set.shape)
+                # print(tested_dataset.test_set.shape)
                 # print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
 
             elif tested_dataset.feature_labels.shape > self._dataset.feature_labels.shape:
@@ -171,13 +175,13 @@ class NEATEvolution:
                 # print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape, tested_dataset.train_set.shape)
 
             if self._scaler:
-                print(tested_dataset.test_set.shape)
+                # print(tested_dataset.test_set.shape)
                 tested_dataset.test_set = self._scaler.transform(tested_dataset.test_set)
                 
             if self._transformer:
                 tested_dataset.test_set = self._transformer.transform(tested_dataset.test_set)
 
-            outputs.append(("TestDataset: "+tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
+            outputs.append((tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
         return outputs
     
     def plot_network(self, save_path :str, view = False ):
@@ -215,21 +219,23 @@ class HyperNEATEvolution:
     def __init__(self, config_path: str, version, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
-        self.Best_network = None
+        self._best_CPPPN = None
         self._fitness_scaling = 1_000 
         self._transformer = None
         self._scaler = None
         self._substrate = None
-        self._neat_config = self._create_input_coordinates(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
-
+        self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
+        self._best_network_architecture = None
         num_features = self._dataset.train_set.shape[1]
-
-        x_coords = np.linspace(start=-1, stop=0, num=num_features, endpoint=True)
-        y_coords = np.linspace(start=-1, stop=0, num=num_features, endpoint=True)
+        #generate points from -1 to 1
+        x_coords = np.linspace(start=-1, stop=1, num=num_features, endpoint=True)
+        y_coords = np.linspace(start=-1, stop=1, num=num_features, endpoint=True)
 
         input_coord = np.column_stack((x_coords, y_coords)).tolist()
-        output_coord = [(1.0,0.0)]
-        self._substrate = Substrate(input_coordinates=input_coord, output_coordinates=output_coord)
+        self.input_coord = [tuple(coord) for coord in input_coord]
+        # output is
+        self.output_coord = [( -1.0,1.0)]
+        self._substrate = Substrate(input_coordinates=self.input_coord, output_coordinates=self.output_coord)
         # create Config for genome
         self._population = neat.Population(self._neat_config)
         self._params = self._params(version=version)
@@ -254,21 +260,22 @@ class HyperNEATEvolution:
                 "max_weight": 5.0,
                 "activation": "sigmoid"}
 
-    def _activate_network(self, network, input):
-        for _ in range(network.activations):
+    def _activate_network(self, network, input, activations):
+        for _ in range(activations):
             output = network.activate(input)
         return output
 
     def _eval_genomes(self, genomes, config):
         for id, genome in genomes:
-            cppn = neat.nn.FeedForwardNetwork.create(genome, self._neat_config)
-            network = ESNetwork(self._substrate, cppn, self._params)
+            cppn = neat.nn.FeedForwardNetwork.create(genome, config)
+            esnetwork = ESNetwork(self._substrate, cppn, self._params)
             
-            predictions = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=network,input=x)[0]) for x in self._dataset.train_set])
+            rec_network = esnetwork.create_phenotype_network()
+            
+            predictions = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
             genome.fitness = sklearn.metrics.f1_score(y_pred=predictions, y_true=self._dataset.train_targets) * self._fitness_scaling
 
-     
-    def _create_input_coordinates(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
+    def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
         if scaling:
             self._scaler = self._dataset.scale_features()
@@ -279,7 +286,7 @@ class HyperNEATEvolution:
 
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
 
-    def RunHyperNEAT(self, iterations: int = 50, parralel: bool = False) -> neat.nn.FeedForwardNetwork:
+    def RunHyperNEAT(self, generations: int = 50, parralel: bool = False) -> tuple[neat.nn.FeedForwardNetwork,ESNetwork] :
         """Runs the fining algorithm using HyperNEAT.
 
         Args:
@@ -297,15 +304,14 @@ class HyperNEATEvolution:
         
         if parralel:
             para_eval = neat.ParallelEvaluator(num_workers=multiprocessing.cpu_count(),eval_function=self._eval_genomes)
-
-            self._winner = population.run(para_eval.eval_function, iterations)
+            self._neat_winner = population.run(para_eval.eval_function, generations)
         else:
-            self._winner = population.run(self._eval_genomes, iterations)
+            self._neat_winner = population.run(self._eval_genomes, generations)
 
-        self.Best_network = neat.nn.FeedForwardNetwork.create(self._winner, self._neat_config)
-        # TODO: add logging winner
-        #print(f"Winner {self._winner}")
-        return self.Best_network
+        self._best_CPPPN = neat.nn.FeedForwardNetwork.create(self._neat_winner, self._neat_config)
+        self._best_network_architecture = ESNetwork(self._substrate, self._best_CPPPN, self._params)
+
+        return self._best_CPPPN, self._best_network_architecture
     
     def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
         """Va;odates best network against unseen data.
@@ -317,14 +323,19 @@ class HyperNEATEvolution:
         Returns:
             dict[str, float]: dictionary of name of a metric and metric's value
         """
+        activations = self._best_network_architecture.activations
+
+        esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
+        network = esnetwork.create_phenotype_network()
+        
         if test_set is None and target_set is None:
-            predicted = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=self.Best_network,input=x)[0]) for x in self._dataset.train_set])
+            predicted = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=network,input=x, activations=activations)[0]) for x in self._dataset.test_set])
             target_set = self._dataset.test_targets
 
         elif (test_set is None and target_set is not None) or (test_set is not None and target_set is None):
             assert ValueError("Invalid test set or target set")
         else:
-            predicted = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=self.Best_network,input=x)[0]) for x in self._dataset.train_set])
+            predicted = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=network,input=x, activations=activations)[0]) for x in test_set])
 
         return {
             'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
@@ -362,10 +373,27 @@ class HyperNEATEvolution:
             if self._transformer:
                 tested_dataset.test_set = self._transformer.transform(tested_dataset.test_set)
 
-            outputs.append(("TestDataset: "+tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
+            outputs.append((tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
         return outputs
     
-    def plot_CPPN_network(self, save_path :str, view = False ):
+    def plot_best_network(self, file_path):
+        """
+        Red edge are inactive black edges are active
+        poitns are scatter from -1 to 1
+        output node is at  -1 0
+
+        Args:
+            file_path str: file output path
+        """
+        if self._best_CPPPN is None or self._best_network_architecture is None:
+            logger.warning('HyperNEAT didnt finish ignoring plot')
+            return
+        logger.debug(f"Input coordinates{self.input_coord} output coordinates {self.output_coord}. Black edges are active red edges are inactive.")
+        esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
+        esnetwork.create_phenotype_network(file_path)
+        
+
+    def plot_CPPN_network(self, save_path :str ):
         """Plots the best genome's network
 
         Args:
@@ -375,9 +403,9 @@ class HyperNEATEvolution:
         Returns:
             None: None
         """
-        if self.Best_network is None:
+        if self._best_CPPPN is None:
             return # nothing to vizualize
-        visualize.draw_net(config=self._neat_config,genome=self._winner, view=view, filename=save_path)
+        draw_net(self._best_CPPPN, save_path)
         
     def plot_statistics(self, save_path :str, view = False ):
         """Plots neat staticstics
