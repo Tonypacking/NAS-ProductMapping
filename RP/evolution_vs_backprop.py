@@ -3,14 +3,12 @@ from WeightSearch_Evolution import Evo_WeightSearch, EvolutionaryNeuronNetwork
 from WeightSearch_Backpropagation import Backprop_Weight_Search
 
 import re
-from pprint import pprint
 from Utils.ProMap import ProductsDatasets
 import argparse
 import numpy as np
 import random
 import csv
 import os
-import sys
 import sklearn
 import warnings
 import csv
@@ -108,9 +106,6 @@ def main(args: argparse.Namespace):
     log_statistics(save_path=validation_output,train_dataset=args.dataset,method='Evolutionary', statistics=eva_statistics, append=True, dimension_reduction=args.dimension_reduction)
 
 
-
-
-
 def parse_tuple_list(values: str) -> list[tuple[int]]:
     """Parser which converts user's input to list of integer tuples
 
@@ -159,6 +154,7 @@ if __name__ == "__main__":
                         'Choices:\nAll- runs all promap datasets.\n'
                         'Dim:- runs all possible dimension reductions only for one dataset(chosen by --dataset argument)\n'
                         'Dataset- runs and trains on all promap datasets with only one dimension reduction (chosen by --dims argument) ')
+    
     # Evolution weight search arguments
     parser.add_argument('--save_evo', '--se', type=str, default=evo_path, help='Directory for saving every generated model')
     # parser.add_argument('--load_evo', '--le', type=str, default='Saves/example.model', help='Path to a model to be loaded.')
@@ -179,7 +175,7 @@ if __name__ == "__main__":
 
     # output arguments
     parser.add_argument('--output', '--o', type=str, default=default_save_path, help='Output directory name in which models validaitons are stored.')
-    parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
+   #  parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     parser.add_argument('--analyze', '--a', default=False, action='store_true', help='Analyze the results of the evolutionary search and backpropagation search without running the search again')
 
     args = parser.parse_args()

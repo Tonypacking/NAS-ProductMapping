@@ -1,10 +1,20 @@
 {
+    "BasicNEAT":
+    {
+
     "NEAT":
-    {
-        "pop_size" : [250]
+        {
+            "pop_size" : [500,300]
+        }
+
     },
-    "DefaultGenome" :
+    
+    "HyperNEAT":
     {
-        "conn_add_prob" : [0.25]
+
+    "NEAT":
+        {
+            "pop_size" : [500,300]
+        }
     }
 }

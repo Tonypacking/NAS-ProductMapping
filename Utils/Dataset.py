@@ -25,7 +25,8 @@ class Dataset:
         self.test_set = testing_data.drop(self.ids, axis=1).iloc[:, :-1].values # drop id1 and id2, becase we don't need product ids (URLs) for classifier
         self.test_targets = testing_data.iloc[:, -1].values
         self.testing_product_ids = testing_data[self.ids].values
-        
+
+
     def scale_features(self) -> StandardScaler:
         """
         Standardize features via sklearn.preprocessing.StandardScaler
@@ -58,8 +59,45 @@ class Dataset:
             self.test_set = pca.transform(self.test_set)
             return pca
         elif method.lower() == 'raw':
-            # No dimension reduction
             return None
         else:
             raise ValueError('Unknows reduction method. Valid reduction method is: lda or pca')
     
+    def extend_dataset(self, larger_dataset: 'Dataset') -> None:
+        """
+        Extends current dataset with missing features from another dataset.
+        Fills missing features with zeros if they are not present in the current dataset. 
+        """
+        # Get indexes of missing features
+        present_features = np.isin(larger_dataset.feature_labels, self.feature_labels)
+        present_features = ~present_features
+        missing_indexes = np.where(present_features)[0]
+
+        extend_to_colomns = larger_dataset.feature_labels.shape[-1]
+        # create new train and test data
+        zero_train_set = np.zeros(shape=(self.train_set.shape[0], extend_to_colomns))
+        zero_test_set = np.zeros(shape=(self.test_set.shape[0], extend_to_colomns))
+        skipped_index = 0
+
+        for index in range(larger_dataset.train_set.shape[1]):
+            if index in missing_indexes: 
+                skipped_index += 1
+                continue
+
+            zero_test_set[:, index] = self.test_set[:, index - skipped_index]
+            zero_train_set[:, index] = self.train_set[:, index - skipped_index]
+
+        self.train_set = zero_train_set
+        self.test_set = zero_test_set
+        self.feature_labels = larger_dataset.feature_labels.copy(deep=True)
+        
+    def reduce_dataset(self, smaller_dataset: 'Dataset') -> None:
+        """
+        Reduces current dataset with another dataset. 
+        Removes features that aren't present in the smaller dataset.
+        """
+        present_feature_mask = np.isin(self.feature_labels, smaller_dataset.feature_labels)
+
+        self.feature_labels = self.feature_labels[present_feature_mask]
+        self.train_set = self.train_set[:, present_feature_mask]
+        self.test_set = self.test_set[:, present_feature_mask]

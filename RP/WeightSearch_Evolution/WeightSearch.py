@@ -1,4 +1,3 @@
-import pprint
 import sklearn
 import numpy as np
 import argparse
@@ -115,7 +114,7 @@ class EvolutionaryNeuronNetwork:
         self._nn.intercepts_ = new_baies
 
     def network_accuracy(self) -> float:
-        """We want equal weights to all classes, regardless of the class distribution. Thus F1 macro average suits here the best. 
+        """Returns accuracy of the network on currebt weights.
 
         Returns:
             float: _description_
@@ -213,7 +212,8 @@ class Evo_WeightSearch:
         # Define it here so we get no warnings.
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, fitness=creator.FitnessMax)
-
+        # If nn are huge and have lots of parameters, evo search would be slow
+        self.MAX_POPULATION_SIZE = 1_000
     @staticmethod
     def _fitness(network: EvolutionaryNeuronNetwork, individual: list) -> tuple[float]:
         """FItness function of evolutionary algorithm.
@@ -242,11 +242,15 @@ class Evo_WeightSearch:
 
             toolbox = base.Toolbox()
             toolbox.register("evaluate", lambda ind: Evo_WeightSearch._fitness(self._neuron_network, ind))
-            toolbox.register("select", tools.selTournament, tournsize=3)
-            
-            toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.1, indpb=0.2)
 
-            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5 )#, lambda_= 2 * self._neuron_network.n_parameters)
+            print(self._neuron_network.n_parameters)
+            parameters = self._neuron_network.n_parameters
+            # Individual and population size is too large and it would take too long to evolve so reduce population size.
+            if self._neuron_network.n_parameters > self.MAX_POPULATION_SIZE:
+                parameters = 100
+                print('Individual size is too large. Reducing population to 100')
+
+            strategy = cma.Strategy(centroid=[0.1] * self._neuron_network.n_parameters, sigma=0.5, lambda_ = parameters, mu = parameters // 4 )
             toolbox.register("generate", strategy.generate, creator.Individual)
             toolbox.register("update", strategy.update)
 
