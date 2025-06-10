@@ -16,15 +16,18 @@ import matplotlib.pyplot as plt
 import random
 import logging
 # TODO import hyperNEAT and ES hyperNEAT
-
+from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import RunCoDeepNEAT
 
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
 HYPERNEAT_METHOD = 'HyperNEAT'
+CODEAPNEAT_METHOD = 'CoDeapNEAT'
+METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD]
 
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
+
 
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
@@ -81,6 +84,34 @@ def main(args: argparse.Namespace):
             logger.info(f"Running HyperNEAT for dataset: {dataset}")
             EsHyperNeatNas(args=args)
             logger.info(f"Finished HyperNEAT for dataset: {dataset}")
+        
+        if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL:
+            logger.info(f"Runnin CoDeapNEAT for dataset: {dataset}")
+            generations = 2
+            training_epochs = 5
+            final_model_training_epochs = 2
+            population_size = 1
+            blueprint_population_size = 10
+            module_population_size = 30
+            n_blueprint_species = 3
+            n_module_species = 3
+            train_data = ProductsDatasets.Load_by_name('google')
+            test_data = ProductsDatasets.Load_by_name('google')
+            save_path_to_codeepneat = 'output/CoDeepNEAT'
+
+            RunCoDeepNEAT(generations,
+                        training_epochs,
+                        population_size,
+                        blueprint_population_size,
+                        module_population_size, 
+                        n_blueprint_species, 
+                        n_module_species, 
+                        final_model_training_epochs, 
+                        train_data.train_set, 
+                        train_data.train_targets, 
+                        test_data.test_set, 
+                        test_data.test_targets, 
+                        save_directory_path=save_path_to_codeepneat)
 
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
@@ -299,6 +330,10 @@ def EsHyperNeatNas(args: argparse.Namespace):
           #   if evolution.Best_network is not None:
             #    pickle.dump(evolution.Best_network,f)
 
+def CoDeepNEAT(args: argparse.Namespace):
+    # TODO
+    pass
+
 
 if __name__ == "__main__":
 
@@ -341,7 +376,7 @@ if __name__ == "__main__":
     parser.add_argument('--default','--def', action='store_false', default=True, help='Disables default value generations in config.' )
     parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all .neat (.ini) files in config directory set by config_directory argument. ')
     
-    parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=[ALL,NEAT_METHOD, HYPERNEAT_METHOD], help='Selects the method of NAS.')
+    parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=METHOD_CHOICES, help='Selects the method of NAS.')
 
     main(parser.parse_args())
 
