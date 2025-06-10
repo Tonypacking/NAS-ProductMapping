@@ -1,5 +1,8 @@
 import json
 import keras
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class CoDeepNeatParser:
     def __init__(self):
@@ -58,16 +61,13 @@ class CoDeepNeatParser:
         list = []
         for value in values:
             if isinstance(value, str):
-                if value.lower() == "conv2d":
-                    list.append(keras.layers.Conv2D)
-                elif value.lower() == "dense":
-                    list.append(keras.layers.Dense)
-                elif value.lower() =="dropout":
-                    list.append(keras.layers.Dropout)
-                elif value.lower() == "maxpooling2d":
-                    list.append(keras.layers.MaxPooling2D)
-                else:
-                    raise ValueError(f"Unknown {value=}")
+
+                try:
+                    list.append(getattr(keras.layers,value))
+                except Exception as exception:
+                    # print(f"Keras.Layer wasn't recognized {exception=}. Setting {key} to None. ")
+                    logger.warning(f"Keras.Layer wasn't recognized {exception=}. Setting {key} to None. ")
+                    return None
             elif isinstance(value,dict):
                 list.append(self._parse_json_to_CoDeepNeatConfig(value))
                 
