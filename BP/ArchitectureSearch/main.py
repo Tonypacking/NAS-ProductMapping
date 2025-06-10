@@ -87,14 +87,15 @@ def main(args: argparse.Namespace):
         
         if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL:
             logger.info(f"Runnin CoDeapNEAT for dataset: {dataset}")
-            generations = 2
-            training_epochs = 5
+            generations = 4
+            training_epochs = 2
             final_model_training_epochs = 2
-            population_size = 1
+            population_size = 2 
             blueprint_population_size = 10
             module_population_size = 30
             n_blueprint_species = 3
             n_module_species = 3
+
             train_data = ProductsDatasets.Load_by_name('google')
             test_data = ProductsDatasets.Load_by_name('google')
             save_path_to_codeepneat = 'output/CoDeepNEAT'

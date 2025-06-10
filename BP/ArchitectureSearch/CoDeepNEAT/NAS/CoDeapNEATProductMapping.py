@@ -34,7 +34,6 @@ def RunCoDeepNEAT(
         generations, training_epochs, population_size, blueprint_population_size, module_population_size,
           n_blueprint_species, n_module_species, final_model_training_epochs,training_data, training_targets, testing_data, testing_targets, save_directory_path ):
 
-    #Set parameter tables
     global_configs = {
         "module_range" : ([1, 3], 'int'),
         "component_range" : ([1, 3], 'int')
@@ -71,6 +70,7 @@ def RunCoDeepNEAT(
     "dense": (keras.layers.Dense, {"units": ([2,2], 'int'), "activation": (["softmax"], 'list')})
     
     }
+
 
     num_classes = 2
 
@@ -174,8 +174,8 @@ def RunCoDeepNEAT(
     # except Exception  as e:
     #     print(e)
 
-    #    # population.individuals.remove(best_model)
-    #    # best_model = population.return_best_individual()
+    #     population.individuals.remove(best_model)
+    #     best_model = population.return_best_individual()
     #     print(f"Best fitting model chosen for retraining: {best_model.name}")
     #     population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
   

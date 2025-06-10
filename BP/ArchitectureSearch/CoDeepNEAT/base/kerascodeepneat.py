@@ -292,7 +292,7 @@ class Individual:
         """
         Returns the keras model representing of the topology.
         """
-
+        #input(f'genmerating {self} {self.compiler}')
         logging.log(21, f"Starting assembling of blueprint {self.blueprint.mark}.")
 
         layer_map = {}
@@ -338,7 +338,9 @@ class Individual:
         logging.log(21, f"Generated the assembled graph for blueprint {self.blueprint.mark}: {assembled_module_graph.nodes()}")
 
         logging.info(f"Generating keras layers")
+        print(21, f"Generated the assembled graph for blueprint {self.blueprint.mark}: {assembled_module_graph.nodes()}")
 
+        print(f"Generating keras layers")
         #Adds Input layer
         logging.info(f"Adding the Input() layer")
         model_input = keras.layers.Input(shape=self.blueprint.input_shape)
@@ -463,11 +465,15 @@ class Individual:
         logging.log(21, f"Using input {model_input} and output {layer_map[max(layer_map)][-1]}")
 
         self.model = keras.models.Model(inputs=model_input, outputs=layer_map[max(layer_map)][-1])
+        # TODO FIX error
         self.model.compile(**self.compiler)
         try:
             plot_model(self.model, to_file=f'{self._save_path}/gen{generation}_blueprint_{self.blueprint.mark}_layer_level_graph_parent1id{self.blueprint.parents[0].mark}_parent2id{self.blueprint.parents[1].mark}.png', show_shapes=True, show_layer_names=True)
         except:
             plot_model(self.model, to_file=f'{self._save_path}/gen{generation}_blueprint_{self.blueprint.mark}_layer_level_graph.png', show_shapes=True, show_layer_names=True)
+        
+     #   input(f'genmerating {self} {self.compiler}')
+
 
     def fit(self, input_x, input_y, training_epochs=1, validation_split=0.15, current_generation="", custom_fit_args=None):
         """
@@ -476,16 +482,16 @@ class Individual:
         # fit(input_x, input_y, training_epochs, validation_split, current_generation="final", custom_fit_args=None)
         logging.info(f"Fitting one individual for {training_epochs} epochs")
         self.generate(generation=current_generation)
+
         if custom_fit_args is not None:
            # input('not node')
             fitness = self.model.fit_generator(**custom_fit_args)
         else:
             # HERE
             print(f"{input_x.shape=} {input_y.shape=}")
-           # self.model.summary()
-           # self.compiler.compile_model(self.model)
+
             fitness = self.model.fit(input_x, input_y, epochs=training_epochs, validation_split=validation_split, batch_size=128)
-           # input('waited')
+
         logging.info(f"Fitness for individual {self.name} using blueprint {self.blueprint.mark} after {training_epochs} epochs: {fitness.history}")
 
         return fitness
@@ -610,9 +616,20 @@ class Population:
         # Currently here because the Optimizer needs to be instantiated in every TFGraph crated, because K.clear_session deletes it.
         #compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(lr=0.005), "metrics":["accuracy"]}
         #compiler["optimizer"] = eval(compiler['optimizer'])
-        compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
+        # TODO change this instead of optimizer use  "optimizer_config": {  # Changed "optimizer" to "optimizer_config" for clarity"name": "Adam",      # Name of the optimizer class"learning_rate": 0.005}, 
+        # and then build it
+        compiler_config = {
+    "loss": "categorical_crossentropy",
+    "optimizer_config": {  # Changed "optimizer" to "optimizer_config" for clarity
+        "name": "Adam",      # Name of the optimizer class
+        "learning_rate": 0.005
+        # You can add other Adam parameters here, e.g., "beta_1": 0.9, "beta_2": 0.999
+    },
+    "metrics": ["accuracy"]
+}
+        #compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
         for n in range(size):
-
+            compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
             #Create a blueprint
             input_shape = self.input_shape
             new_blueprint = self.return_random_blueprint()
@@ -1464,3 +1481,42 @@ class GraphOperator:
 
         return new_graph
     
+
+class Compiler:
+    def __init__(self, optimizer_config, loss_config, metrics_config):
+        self._optimizer_config = optimizer_config
+        self._loss_config = loss_config
+        self._metrics_config = metrics_config
+
+    def compile_model(self, model_to_compile):
+        """
+        Compiles the given Keras model with a NEW optimizer instance.
+        """
+        print(f"DEBUG: Compiling model: {model_to_compile.name if hasattr(model_to_compile, 'name') else 'Unnamed Model'}")
+
+
+        optimizer_type_str = self._optimizer_config.get('name', 'Adam')
+        optimizer_params = {k: v for k, v in self._optimizer_config.items() if k != 'name'} # Exclude 'name' from params
+
+        if optimizer_type_str.lower() == 'adam':
+            current_optimizer_instance = keras.optimizers.Adam(**optimizer_params)
+        elif optimizer_type_str.lower() == 'sgd':
+            current_optimizer_instance = keras.optimizers.SGD(**optimizer_params)
+        elif optimizer_type_str.lower() == 'rmsprop':
+            current_optimizer_instance = keras.optimizers.RMSprop(**optimizer_params)
+        else:
+            raise ValueError(f"Unsupported optimizer type in config: {optimizer_type_str}")
+
+        print(f"DEBUG: Created a NEW optimizer instance: {current_optimizer_instance.name}")
+
+        # Get loss and metrics
+        loss_function = keras.losses.get(self._loss_config['name']) if isinstance(self._loss_config, dict) else self._loss_config
+        metrics_list = [keras.metrics.get(m) if isinstance(m, str) else m for m in self._metrics_config]
+
+        # Compile the model with the NEW optimizer
+        model_to_compile.compile(
+            optimizer=current_optimizer_instance,
+            loss=loss_function,
+            metrics=metrics_list
+        )
+        print(f"DEBUG: Model {model_to_compile.name if hasattr(model_to_compile, 'name') else 'Unnamed Model'} compiled successfully.")
