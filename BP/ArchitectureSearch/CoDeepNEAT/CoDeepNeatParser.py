@@ -15,6 +15,10 @@ class CoDeepNeatParser:
         self.n_module_species = None
         self.final_model_training_epoch = None
 
+        self.crossover_rate = None
+        self.mutation_rate = None
+        self.elitism_rate = None
+
         self._file_content = None
 
     def _load_args(self) :
@@ -32,6 +36,10 @@ class CoDeepNeatParser:
         self.module_population_size = int(args['module_population_size'])
         self.n_blueprint_species = int(args['n_blueprint_species'])
         self.n_module_species = int(args['n_module_species'])
+
+        self.crossover_rate = float(args['crossover_rate'])
+        self.mutation_rate = float(args['mutation_rate'])
+        self.elitism_rate = float(args['elitism_rate'])
 
     def load_config(self,config_path: str) -> None:
 

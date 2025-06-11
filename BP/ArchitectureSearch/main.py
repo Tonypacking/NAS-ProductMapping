@@ -16,8 +16,7 @@ import matplotlib.pyplot as plt
 import random
 import logging
 # TODO import hyperNEAT and ES hyperNEAT
-from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import RunCoDeepNEAT
-
+from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import CoDeepNEAT
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
 HYPERNEAT_METHOD = 'HyperNEAT'
@@ -86,23 +85,13 @@ def main(args: argparse.Namespace):
             logger.info(f"Finished HyperNEAT for dataset: {dataset}")
         
         if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL:
-            logger.info(f"Runnin CoDeapNEAT for dataset: {dataset}")
-
 
             # TODO add dataset loading setting from args.dataset also run for 
             #TODO dimension and scaling of dataset
             # TODO make validating file against different datasets
-            train_data = ProductsDatasets.Load_by_name('google')
-            test_data = ProductsDatasets.Load_by_name('google')
-            save_path_to_codeepneat = 'output/CoDeepNEAT'
-
-            RunCoDeepNEAT(args,
-                        train_data.train_set, 
-                        train_data.train_targets, 
-                        test_data.test_set, 
-                        test_data.test_targets, 
-                        save_directory_path=save_path_to_codeepneat)
-
+            logger.info("Running CoDeepNEAT for dataset: {dataset}")
+            CoDeepNeat(args)
+            logger.info(f"Finished CoDeepNEAT for dataset: {dataset}")
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
     """Writes global resutls to a args.output/global_results.csv file.
@@ -320,9 +309,11 @@ def EsHyperNeatNas(args: argparse.Namespace):
           #   if evolution.Best_network is not None:
             #    pickle.dump(evolution.Best_network,f)
 
-def CoDeepNEAT(args: argparse.Namespace):
-    # TODO
-    pass
+def CoDeepNeat(args: argparse.Namespace):
+    co_deep_neat = CoDeepNEAT()
+    # TODO validation and save the validation
+
+    co_deep_neat.RunCoDeepNEAT(args)
 
 
 if __name__ == "__main__":
