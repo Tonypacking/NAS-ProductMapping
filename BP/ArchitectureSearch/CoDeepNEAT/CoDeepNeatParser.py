@@ -33,15 +33,12 @@ class CoDeepNeatParser:
         self.n_blueprint_species = int(args['n_blueprint_species'])
         self.n_module_species = int(args['n_module_species'])
 
-    
     def load_config(self,config_path: str) -> None:
 
         with open(config_path, 'r', encoding='utf-8') as f:
             self._file_content = json.load(f)['CoDeepNEAT']
         self._load_args()
-
-
-        
+   
     def _convert_list(self, list: list):
         # dont convert the input if it is a string for example in padding or data formats channels last
         if any(isinstance(x, str) for x in list):
@@ -74,13 +71,11 @@ class CoDeepNeatParser:
         return tuple(list)
             #print(f"val {value}")
     
-
     def Get_global_config(self):
         input_confg : dict= self._file_content['global_configs']
 
         return self._parse_json_to_CoDeepNeatConfig(input_confg)
     
-
     def Get_input_configs(self):
         input_confg : dict= self._file_content['input_configs']        
         if input_confg is None:
