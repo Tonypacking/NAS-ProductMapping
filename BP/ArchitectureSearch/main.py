@@ -20,7 +20,7 @@ from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import CoDeep
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
 HYPERNEAT_METHOD = 'HyperNEAT'
-CODEAPNEAT_METHOD = 'CoDeapNEAT'
+CODEAPNEAT_METHOD = 'CoDeepNEAT'
 METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD]
 
 # NAS methods directory names
@@ -85,10 +85,6 @@ def main(args: argparse.Namespace):
             logger.info(f"Finished HyperNEAT for dataset: {dataset}")
         
         if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL:
-
-            # TODO add dataset loading setting from args.dataset also run for 
-            #TODO dimension and scaling of dataset
-            # TODO make validating file against different datasets
             logger.info("Running CoDeepNEAT for dataset: {dataset}")
             CoDeepNeat(args)
             logger.info(f"Finished CoDeepNEAT for dataset: {dataset}")
@@ -305,16 +301,18 @@ def EsHyperNeatNas(args: argparse.Namespace):
         evolution.plot_statistics(os.path.join(output_path,'Statistics'))
         evolution.plot_CPPN_network(os.path.join(output_path,'CPPN'))
         evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
-       #  with open(os.path.join(output_path,'best_network'), 'wb') as f:
-          #   if evolution.Best_network is not None:
-            #    pickle.dump(evolution.Best_network,f)
 
 def CoDeepNeat(args: argparse.Namespace):
     co_deep_neat = CoDeepNEAT()
     # TODO validation and save the validation
 
     co_deep_neat.RunCoDeepNEAT(args)
-
+    if args.validate_all:
+        outputs = co_deep_neat.validate_all()
+    else:
+        outputs = [(co_deep_neat._train_dataset.dataset_name, co_deep_neat.validate())]
+    print(outputs)
+    # TODO write the output in output.csv and Global csv result
 
 if __name__ == "__main__":
 

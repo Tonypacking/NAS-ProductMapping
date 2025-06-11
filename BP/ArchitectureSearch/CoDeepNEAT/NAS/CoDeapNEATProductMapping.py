@@ -40,7 +40,7 @@ class CoDeepNEAT:
     def __init__(self):
         self.best_network: keras.models.Model = None    
         self._scaler = None
-        self._dimension_reduction = None
+        self._transformer = None
         self._train_dataset : Dataset|None = None
 
     def RunCoDeepNEAT(self, args: argparse.Namespace ):
@@ -58,7 +58,7 @@ class CoDeepNEAT:
             self._scaler = self._train_dataset.scale_features()
         
         if args.dimension_reduction != 'raw':
-            self._dimension_reduction = self._train_dataset.reduce_dimensions(args.dimension_reduction)
+            self._transformer = self._train_dataset.reduce_dimensions(args.dimension_reduction)
         
         generations = codeepneat_parser.generations
         training_epochs = codeepneat_parser.training_epochs
@@ -167,11 +167,11 @@ class CoDeepNEAT:
         self.best_network = best_individual.model
         #print(self._train_dataset.test_set[0])
         # TODO reshape training dataset
-        test_data = self._train_dataset.test_set.reshape(self._train_dataset.test_set.shape[0], self._train_dataset.test_set.shape[1], 1, 1)
-        predictions = self.best_network.predict(test_data)
-        print(np.argmax(predictions))
+        # test_data = self._train_dataset.test_set.reshape(self._train_dataset.test_set.shape[0], self._train_dataset.test_set.shape[1], 1, 1)
+        # predictions = self.best_network.predict(test_data)
 
-        print(f"accuracy: {sklearn.metrics.accuracy_score(y_pred=np.argmax(predictions,axis=1), y_true=self._train_dataset.test_targets)}")
+
+        #print(f"accuracy: {sklearn.metrics.accuracy_score(y_pred=np.argmax(predictions,axis=1), y_true=self._train_dataset.test_targets)}")
     # print(best_model)
         #'Best model')
         # Set data augmentation for full training
@@ -199,14 +199,48 @@ class CoDeepNEAT:
     # population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
 
 
-    def validate(self):
-        pass
+    def validate(self, testing_dataset: Dataset| None = None):
+        if testing_dataset is None:
+            testing_dataset = self._train_dataset
 
-    def validate_all(self):
+        test_data = testing_dataset.test_set.reshape(testing_dataset.test_set.shape[0], testing_dataset.test_set.shape[1], 1, 1)
+        target_set = testing_dataset.test_targets
+        predicted = np.argmax(self.best_network.predict(test_data), axis=1)
 
-        for dataset_name in ProductsDatasets.NAME_MAP.keys():
-            pass
+       # print(f"accuracy: {sklearn.metrics.accuracy_score(y_pred=np.argmax(predicted,axis=1), y_true=testing_dataset.test_targets)}") 
+        return {
+            'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
+            'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
+            'precision' : sklearn.metrics.precision_score(y_pred=predicted, y_true=target_set),
+            'recall' : sklearn.metrics.recall_score(y_pred=predicted, y_true=target_set),
+            'confusion_matrix' : sklearn.metrics.confusion_matrix(y_pred=predicted, y_true=target_set),
+            'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
+        }
 
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
+        """Validates against all promap datasets if feature count is the same.
+        Resises the testing dataset to match the training dataset's feature columns.
+
+        Returns:
+            list[tuple[str, dict[str, float]]]: List of tuples with name of tested dataset and dictionary of metric and metrics value.
+        """
+
+        outputs = []
+        for name in ProductsDatasets.NAME_MAP:
+            tested_dataset = ProductsDatasets.Load_by_name(name)
+
+            if tested_dataset.feature_labels.shape < self._train_dataset.feature_labels.shape:
+                tested_dataset.extend_dataset(self._train_dataset)
+            elif tested_dataset.feature_labels.shape > self._train_dataset.feature_labels.shape:
+                tested_dataset.reduce_dataset(self._train_dataset)
+            
+            if self._scaler:
+                tested_dataset.test_set = self._scaler.transform(tested_dataset.test_set)
+            if self._transformer :
+                tested_dataset.test_set = self._transformer.transform(tested_dataset.test_set)
+            outputs.append((tested_dataset.dataset_name, self.validate(tested_dataset)))
+            
+        return outputs
 if __name__ == "__main__":
 
     generations = 2
