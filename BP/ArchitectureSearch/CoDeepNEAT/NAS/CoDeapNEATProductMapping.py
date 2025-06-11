@@ -20,7 +20,8 @@ from keras import regularizers
 # kerascodeepneat = imp.load_source("kerascodeepneat", "../base/kerascodeepneat.py")
 import importlib.util
 import os
-
+from BP.ArchitectureSearch.CoDeepNEAT.CoDeepNeatParser import CoDeepNeatParser
+import argparse
 print(os.path.dirname(os.path.abspath(__file__)))
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 kerascodeepneat_path = os.path.join(current_script_dir,"..", "base", "kerascodeepneat.py")
@@ -30,47 +31,38 @@ spec = importlib.util.spec_from_file_location("kerascodeepneat", kerascodeepneat
 kerascodeepneat = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(kerascodeepneat)
 
-def RunCoDeepNEAT(
-        generations, training_epochs, population_size, blueprint_population_size, module_population_size,
-          n_blueprint_species, n_module_species, final_model_training_epochs,training_data, training_targets, testing_data, testing_targets, save_directory_path ):
+def RunCoDeepNEAT(args: argparse.Namespace,training_data, training_targets, testing_data, testing_targets, save_directory_path ):
 
-    global_configs = {
-        "module_range" : ([1, 3], 'int'),
-        "component_range" : ([1, 3], 'int')
-    }
+    codeepneat_parser = CoDeepNeatParser()
+    codeepneat_parser.load_config(args.input)
 
-    input_configs = {
-    "module_range" : ([1, 1], 'int'),
-    "component_range" : ([1, 1], 'int')
-    }
+    generations = codeepneat_parser.generations
+    training_epochs = codeepneat_parser.training_epochs
+    population_size = codeepneat_parser.population_size
 
-    output_configs = {
-        "module_range" : ([1, 1], 'int'),
-        "component_range" : ([1, 1], 'int')
-    }
+    final_model_training_epochs = codeepneat_parser.final_model_training_epoch
+    blueprint_population_size = codeepneat_parser.blueprint_population_size
+    module_population_size = codeepneat_parser.module_population_size
+    n_blueprint_species = codeepneat_parser.n_blueprint_species
+    n_module_species = codeepneat_parser.n_module_species  
 
-    possible_components = {
-        "conv2d": (keras.layers.Conv2D, {"filters": ([16,48], 'int'), "kernel_size": ([1, 3, 5], 'list'), "strides": ([1], 'list'), "data_format": (['channels_last'], 'list'), "padding": (['same'], 'list'), "activation": (["relu"], 'list')}),
-        #"dense": (keras.layers.Dense, {"units": ([8, 48], 'int')})
-    }
-    possible_inputs = {
-        "conv2d": (keras.layers.Conv2D, {"filters": ([16,64], 'int'), "kernel_size": ([1], 'list'), "activation": (["relu"], 'list')})
-    }
-    possible_outputs = {
-        "dense": (keras.layers.Dense, {"units": ([32,256], 'int'), "activation": (["relu"], 'list')})
-    }
+    global_configs = codeepneat_parser.Get_global_config()
 
-    possible_complementary_components = {
-        #"maxpooling2d": (keras.layers.MaxPooling2D, {"pool_size": ([2], 'list')}),
-        "dropout": (keras.layers.Dropout, {"rate": ([0, 0.5], 'float')})
-    }
+    input_configs = codeepneat_parser.Get_input_configs()
 
-    possible_complementary_inputs = None
-    possible_complementary_outputs = {
-    "dense": (keras.layers.Dense, {"units": ([2,2], 'int'), "activation": (["softmax"], 'list')})
-    
-    }
+    output_configs = codeepneat_parser.Get_output_configs()
 
+    possible_components = codeepneat_parser.Get_possible_components()
+
+    possible_inputs = codeepneat_parser.Get_Possible_inputs()
+
+    possible_outputs = codeepneat_parser.Get_possible_outputs()
+
+    possible_complementary_components = codeepneat_parser.Get_possible_complementaty_components()
+
+    possible_complementary_inputs = codeepneat_parser.Get_possible_complementary_inputs()
+
+    possible_complementary_outputs = codeepneat_parser.Get_possible_complementary_outputs()
 
     num_classes = 2
 
@@ -82,22 +74,10 @@ def RunCoDeepNEAT(
 
     x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1, 1))
     x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1, 1))
-
-   # print(f"{x_train.shape} {y_train.shape} {dataset.train_set.shape} {dataset.train_targets.shape}")
-   # print(f"{x_test.shape}, {y_test.shape} {dataset.test_set.shape} {dataset.test_targets.shape}")
  
     validation_split = 0.10
     #training
     batch_size = 32
-
-    #data augmentation
-    # datagen = ImageDataGenerator(
-    #     rotation_range=15,
-    #     width_shift_range=0.1,
-    #     height_shift_range=0.1,
-    #     horizontal_flip=True,
-    #     )
-    # datagen.fit(x_train)
 
     my_dataset = kerascodeepneat.Datasets(training=[x_train, y_train], test=[x_test, y_test])
 
@@ -130,7 +110,6 @@ def RunCoDeepNEAT(
     improved_dataset.custom_fit_args = custom_fit_args
     my_dataset.custom_fit_args = None
 
-    # kerascodeepneat.Population.ChangeSaveDir('ss')
     # Initiate population
     population = kerascodeepneat.Population(my_dataset, input_shape=x_train.shape[1:], population_size=population_size, compiler=compiler, save_directory= save_directory_path)
     
@@ -164,6 +143,7 @@ def RunCoDeepNEAT(
     # Set data augmentation for full training
     # population.datasets = improved_dataset
    # print("Using data augmentation.")
+
     # TODO Fix retraining best model architecture
     print(f"Best fitting model {best_model.name}")
     # retrainign doesnt work
