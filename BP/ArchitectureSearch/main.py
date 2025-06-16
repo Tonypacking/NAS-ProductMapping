@@ -170,7 +170,9 @@ def Neat_Nas(args: argparse.Namespace):
         evolution = NeuroEvolution.NEATEvolution(config, data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract used parameters and save it as a folder name in which we will save our results.
-        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
+        # folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
+        # now working on win also
+        folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
         used_preprocessing = '_'
 
         if args.scale:
