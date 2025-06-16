@@ -26,7 +26,7 @@ METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD]
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
-
+CODEEPNEAT_DIRECTORY = "CoDeepNEAT"
 
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
@@ -70,8 +70,8 @@ def main(args: argparse.Namespace):
     
     for dataset in available_datasets:
         #HACK: Instead of passing dataset to all methods, change it globaly here.
-
         args.dataset = dataset
+
         logger.info(f"Running Neuron Architecture Search for dataset: {dataset}")
         # TODO add more NAS methods like random search, DARTS and RL based NAS
         if args.NAS_method == NEAT_METHOD or args.NAS_method == ALL:
@@ -304,15 +304,30 @@ def EsHyperNeatNas(args: argparse.Namespace):
 
 def CoDeepNeat(args: argparse.Namespace):
     co_deep_neat = CoDeepNEAT()
-    # TODO validation and save the validation
 
     co_deep_neat.RunCoDeepNEAT(args)
+
     if args.validate_all:
         outputs = co_deep_neat.validate_all()
     else:
         outputs = [(co_deep_neat._train_dataset.dataset_name, co_deep_neat.validate())]
-    print(outputs)
-    # TODO write the output in output.csv and Global csv result
+
+    output_path = os.path.join(args.output,CODEEPNEAT_DIRECTORY)
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
+
+    with open(os.path.join(output_path, f'{CODEEPNEAT_DIRECTORY}_local_scores.csv'), mode='w') as f:
+        # Create csv writer and write header
+        csw_writer = csv.writer(f)
+        csw_writer.writerow(CSV_HEADER)  
+
+        for dataset_name, output in outputs:
+            # Save to local results
+            row = [args.dataset, dataset_name,args.scale,args.dimension_reduction,CODEAPNEAT_METHOD,co_deep_neat.training_parameters, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+            csw_writer.writerow(row)
+            # Save results to global results too
+            Write_Global_Result(args, row)
+        # TODO write the output in output.csv and Global csv result
 
 if __name__ == "__main__":
 

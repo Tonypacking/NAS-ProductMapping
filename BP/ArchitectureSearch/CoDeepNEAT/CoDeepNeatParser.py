@@ -19,6 +19,8 @@ class CoDeepNeatParser:
         self.mutation_rate = None
         self.elitism_rate = None
 
+        self.parameters = None
+
         self._file_content = None
 
     def _load_args(self) :
@@ -40,6 +42,9 @@ class CoDeepNeatParser:
         self.crossover_rate = float(args['crossover_rate'])
         self.mutation_rate = float(args['mutation_rate'])
         self.elitism_rate = float(args['elitism_rate'])
+
+        self.parameters = f"gen-{self.generations};epochs-{self.training_epochs};pop_size-{self.population_size};mutate-{self.mutation_rate};crossover-{self.crossover_rate};module_size-{self.module_population_size};module_pop-{self.module_population_size}"
+        
 
     def load_config(self,config_path: str) -> None:
 

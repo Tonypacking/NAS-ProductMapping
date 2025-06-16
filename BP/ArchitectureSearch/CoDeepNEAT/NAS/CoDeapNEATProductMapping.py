@@ -26,6 +26,7 @@ from BP.ArchitectureSearch.CoDeepNEAT.CoDeepNeatParser import CoDeepNeatParser
 from Utils.ProMap import ProductsDatasets, Dataset
 import argparse
 import sklearn
+CODEEPNEAT_DIRECTORY = "CoDeepNEAT" 
 print(os.path.dirname(os.path.abspath(__file__)))
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 kerascodeepneat_path = os.path.join(current_script_dir,"..", "base", "kerascodeepneat.py")
@@ -42,15 +43,16 @@ class CoDeepNEAT:
         self._scaler = None
         self._transformer = None
         self._train_dataset : Dataset|None = None
+        self.training_parameters = None
 
     def RunCoDeepNEAT(self, args: argparse.Namespace ):
         
         codeepneat_parser = CoDeepNeatParser()
         codeepneat_parser.load_config(args.input)
-
+        self.training_parameters = codeepneat_parser.parameters
         self._train_dataset = ProductsDatasets.Load_by_name(args.dataset)
 
-        save_path_to_codeepneat = os.path.join(args.output, 'CoDeepNEAT')
+        save_path_to_codeepneat = os.path.join(args.output, CODEEPNEAT_DIRECTORY)
         if not os.path.exists(save_path_to_codeepneat):
             os.makedirs(save_path_to_codeepneat, exist_ok=True)
         
