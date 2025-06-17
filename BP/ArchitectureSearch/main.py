@@ -222,10 +222,10 @@ def Neat_Nas(args: argparse.Namespace):
     best_networks.sort(key=lambda x: x[0], reverse=True)
     best_networks_path = os.path.join(neat_dir,'best_networks',evolution.dataset_name+used_preprocessing)
 
-    if not os.path.isdir(best_networks_path):
-        os.makedirs(best_networks_path, exist_ok=True)
+    # if not os.path.isdir(best_networks_path):
+    #     os.makedirs(best_networks_path, exist_ok=True)
 
-    with open(best_networks_path+'best', mode='w') as f :
+    with open(best_networks_path+'_best.neat', mode='w') as f :
         for rank, (value, path) in enumerate(best_networks[: args.kbest], start=1):
             f.write(f"Rank: {rank} with f1_score: {value}.   Attributes: {path}\n")
 
@@ -300,6 +300,8 @@ def EsHyperNeatNas(args: argparse.Namespace):
 
 
         #evolution.plot_network(os.path.join(output_path,'BestNetwork'))
+        import matplotlib.pyplot as plt
+        plt.close('all') # ensure everything is closed
         evolution.plot_statistics(os.path.join(output_path,'Statistics'))
         evolution.plot_CPPN_network(os.path.join(output_path,'CPPN'))
         evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
