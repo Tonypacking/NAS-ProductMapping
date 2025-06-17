@@ -158,9 +158,9 @@ class NEATEvolution:
             list[tuple[str, dict[str, float]]]: List of tuples with name of tested dataset and dictionary of metric and metrics value.
         """
         outputs = []
+        # TODO train accuracy
         for name in ProMap.ProductsDatasets.NAME_MAP:
             tested_dataset= ProMap.ProductsDatasets.Load_by_name(name)
-
 
             if tested_dataset.feature_labels.shape < self._dataset.feature_labels.shape:
                 #print(tested_dataset.feature_labels.shape, tested_dataset.test_set.shape,tested_dataset.train_set.shape)
@@ -220,7 +220,7 @@ class HyperNEATEvolution:
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
-        self._fitness_scaling = 1_000 
+        self._fitness_scaling = 1
         self._transformer = None
         self._scaler = None
         self._substrate = None
@@ -420,6 +420,6 @@ class HyperNEATEvolution:
         if self._statistics is None:
             return # nothing to vizualize
         visualize.plot_stats(self._statistics, filename=save_path, view=view)
-
+        
    # def draw_network(self, save_path):
         #draw_net(self.)
