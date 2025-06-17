@@ -47,7 +47,7 @@ def plot_stats(
     if view:
         plt.show()
 
-    plt.close()
+    plt.close('all')
 
 
 def plot_species(

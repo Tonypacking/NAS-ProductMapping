@@ -64,7 +64,8 @@ def onclick(event):
     # For now, path_to_cppn should match path in test_cppn.py, sorry.
     with open(path_to_cppn, 'rb') as cppn_input:
         cppn = pickle.load(cppn_input)
-        from pureples.es_hyperneat.es_hyperneat import find_pattern
+       # from pureples.es_hyperneat.es_hyperneat import find_pattern
+        from es_hyperneat import find_pattern
         pattern = find_pattern(cppn, (x, y))
         draw_pattern(pattern)
 
@@ -113,3 +114,4 @@ def draw_es(id_to_coords, connections, filename):
 
     plt.grid()
     fig.savefig(filename)
+    plt.close('all')
