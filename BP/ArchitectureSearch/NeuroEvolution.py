@@ -220,7 +220,7 @@ class HyperNEATEvolution:
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
-        self._fitness_scaling = 1
+        self._fitness_scaling = -100 # minus 100 becase we want to maximize NLL
         self._transformer = None
         self._scaler = None
         self._substrate = None
@@ -255,9 +255,9 @@ class HyperNEATEvolution:
                 "max_depth": 1 if version == "S" else 2 if version == "M" else 3,
                 "variance_threshold": 0.03,
                 "band_threshold": 0.3,
-                "iteration_level": 1,
+                "iteration_level": 5,
                 "division_threshold": 0.5,
-                "max_weight": 5.0,
+                "max_weight": 30.0,
                 "activation": "sigmoid"}
 
     def _activate_network(self, network, input, activations):
@@ -271,10 +271,12 @@ class HyperNEATEvolution:
             esnetwork = ESNetwork(self._substrate, cppn, self._params)
             
             rec_network = esnetwork.create_phenotype_network()
-            
-            predictions = np.array([NEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
-            genome.fitness = sklearn.metrics.f1_score(y_pred=predictions, y_true=self._dataset.train_targets) * self._fitness_scaling
-
+           # predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
+            predictions = np.array([self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0] for x in self._dataset.train_set])
+            # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * self._fitness_scaling
+            loss = sklearn.metrics.log_loss(y_true=self._dataset.train_targets, y_pred=predictions)
+            genome.fitness = loss * self._fitness_scaling
+ 
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
         if scaling:
@@ -392,7 +394,6 @@ class HyperNEATEvolution:
         esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
         esnetwork.create_phenotype_network(file_path)
         
-
     def plot_CPPN_network(self, save_path :str ):
         """Plots the best genome's network
 
