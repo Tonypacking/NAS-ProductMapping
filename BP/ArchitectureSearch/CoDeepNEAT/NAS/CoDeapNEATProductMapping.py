@@ -172,51 +172,26 @@ class CoDeepNEAT:
         # Return the best model
         best_individual = population.return_best_individual()
         self.best_network = best_individual.model
-        #print(self._train_dataset.test_set[0])
-        # TODO reshape training dataset
-        # test_data = self._train_dataset.test_set.reshape(self._train_dataset.test_set.shape[0], self._train_dataset.test_set.shape[1], 1, 1)
-        # predictions = self.best_network.predict(test_data)
+
+        
+        best_model = keras.Model.from_config(best_individual.model.get_config())
+        best_model.compile(optimizer='adam', loss = 'categorical_crossentropy',metrics=[
+            'accuracy',
+             keras.metrics.Precision(),
+             keras.metrics.Recall()    ,
+                                                                
+        print(f"Retraining best network architecture for epochs: {final_model_training_epochs}")                                                                          ])
+        best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
+
+        self.best_network = best_model
 
 
-        #print(f"accuracy: {sklearn.metrics.accuracy_score(y_pred=np.argmax(predictions,axis=1), y_true=self._train_dataset.test_targets)}")
-    # print(best_model)
-        #'Best model')
-        # Set data augmentation for full training
-        # population.datasets = improved_dataset
-    # print("Using data augmentation.")
 
-        # TODO Fix retraining best model architecture
+
         print(f"Best fitting model {best_individual.name}")
         print(f"Best fitting model chosen for retraining: {best_individual.name}")
 
-        # new_model = keras.models.clone_model(best_individual.model)
-        # compiler_dict = compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
-        # new_model.compile(**compiler_dict)
-
-        # best_individual.model = new_model
-
-        # new_model.summary()
-        # print('older model')
-        # individual.model.summary()
-        # input("crash")
-      #  input("Before train full")
-      #  population.train_full_model(best_individual, final_model_training_epochs, validation_split, None)
-        # retrainign doesnt work
-        # try:
-        #     print(f"Best fitting model chosen for retraining: {best_model.name}")
-        #     print(f"Name {best_model.name} final model {final_model_training_epochs} valsplit {validation_split} custom args")
-        #     population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
-        # except Exception  as e:
-        #     print(e)
-        #     # population.individuals.remove(best_model)
-        #     best_model = population.return_best_individual()
-        #     print(f"Best fitting model chosen for retraining: {best_model.name}")
-        #     population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
-    
-        #population.individuals.remove(best_model)
-        #best_model = population.return_best_individual()
-        # print(f"Best fitting model chosen for retraining: {best_model.name}")
-    # population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
+      
 
 
     def validate(self, testing_dataset: Dataset| None = None):
