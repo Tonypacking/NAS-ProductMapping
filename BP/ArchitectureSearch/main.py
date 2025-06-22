@@ -19,6 +19,7 @@ import logging
 from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import CoDeepNEAT
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
+NORMAL_PROMAP = 'promap'
 HYPERNEAT_METHOD = 'HyperNEAT'
 CODEAPNEAT_METHOD = 'CoDeepNEAT'
 METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD]
@@ -65,6 +66,8 @@ def main(args: argparse.Namespace):
 
     if args.dataset == ALL:
         available_datasets = list(ProductsDatasets.NAME_MAP.keys())
+    elif args.dataset == NORMAL_PROMAP:
+        available_datasets = list(ProductsDatasets.PROMAP_DATASETS.keys())
     else:
         available_datasets = [args.dataset]
     
@@ -252,10 +255,11 @@ def EsHyperNeatNas(args: argparse.Namespace):
         if not os.path.isdir(hyperNEAT_dir):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
-        evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+        evolution = NeuroEvolution.ESHyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+        #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract used parameters and save it as a folder name in which we will save our results.
-        folder_name = config.split('/')[-1][:-len(NeatConfigParser.NeatConfigParser.HYPERNEAT_SUFFIX)]
+        folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
         used_preprocessing = '_'
 
         if args.scale:
@@ -307,23 +311,37 @@ def EsHyperNeatNas(args: argparse.Namespace):
         evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
 
 def CoDeepNeat(args: argparse.Namespace):
-    co_deep_neat = CoDeepNEAT()
 
-    co_deep_neat.RunCoDeepNEAT(args)
+
+    used_preprocessing = "_"
+
+    if args.scale:
+        used_preprocessing += 'Standard_Scaling_'
+
+    used_preprocessing += args.dimension_reduction
+
+    output_path = os.path.join(args.output,CODEEPNEAT_DIRECTORY,args.dataset + used_preprocessing)
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
+
+    co_deep_neat = CoDeepNEAT()
+    co_deep_neat.RunCoDeepNEAT(args, output_path)
 
     if args.validate_all:
         outputs = co_deep_neat.validate_all()
     else:
         outputs = [(co_deep_neat._train_dataset.dataset_name, co_deep_neat.validate())]
 
-    output_path = os.path.join(args.output,CODEEPNEAT_DIRECTORY)
-    if not os.path.isdir(output_path):
-        os.makedirs(output_path, exist_ok=True)
+    cdn_path = os.path.join(output_path, f'{CODEEPNEAT_DIRECTORY}_local_scores.csv')
 
-    with open(os.path.join(output_path, f'{CODEEPNEAT_DIRECTORY}_local_scores.csv'), mode='w') as f:
+    mode = "w" if not os.path.exists(cdn_path) or args.remove_global_results or os.path.getsize(cdn_path) == 0 else "a"
+        
+
+    with open(cdn_path, mode) as f:
         # Create csv writer and write header
         csw_writer = csv.writer(f)
-        csw_writer.writerow(CSV_HEADER)  
+        if mode == "w":
+            csw_writer.writerow(CSV_HEADER)  
 
         for dataset_name, output in outputs:
             # Save to local results
@@ -331,7 +349,7 @@ def CoDeepNeat(args: argparse.Namespace):
             csw_writer.writerow(row)
             # Save results to global results too
             Write_Global_Result(args, row)
-        # TODO write the output in output.csv and Global csv result
+
 
 if __name__ == "__main__":
 
@@ -359,7 +377,7 @@ if __name__ == "__main__":
     parser.add_argument('--scale', '--s',default=False, action='store_true', help="Standardize data")
     
     # dataset arguments
-    available_datasets = list(ProductsDatasets.NAME_MAP.keys()) + [ALL]
+    available_datasets = list(ProductsDatasets.NAME_MAP.keys()) + [ALL, NORMAL_PROMAP]
     parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=available_datasets, help='name of promap dataset or path')
     # output arguments
     logger.debug(f"{available_datasets}")
