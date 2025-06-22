@@ -45,14 +45,15 @@ class CoDeepNEAT:
         self._train_dataset : Dataset|None = None
         self.training_parameters = None
 
-    def RunCoDeepNEAT(self, args: argparse.Namespace ):
+    def RunCoDeepNEAT(self, args: argparse.Namespace, save_path_to_codeepneat ):
         
         codeepneat_parser = CoDeepNeatParser()
         codeepneat_parser.load_config(args.input)
+
         self.training_parameters = codeepneat_parser.parameters
         self._train_dataset = ProductsDatasets.Load_by_name(args.dataset)
 
-        save_path_to_codeepneat = os.path.join(args.output, CODEEPNEAT_DIRECTORY)
+
         if not os.path.exists(save_path_to_codeepneat):
             os.makedirs(save_path_to_codeepneat, exist_ok=True)
         
@@ -110,8 +111,8 @@ class CoDeepNEAT:
 
         my_dataset = kerascodeepneat.Datasets(training=[x_train, y_train], test=[x_test, y_test])
 
-        my_dataset.SAMPLE_SIZE = int(x_train.shape[0] * 0.4)
-        my_dataset.TEST_SAMPLE_SIZE = int( x_test.shape[0] * 0.2)
+        my_dataset.SAMPLE_SIZE = int(x_train.shape[0])
+        my_dataset.TEST_SAMPLE_SIZE = int( x_test.shape[0])
 
         logging.basicConfig(filename='execution.log',
                             filemode='w+', level=logging.INFO,
@@ -119,7 +120,11 @@ class CoDeepNEAT:
         
         logging.addLevelName(21, "TOPOLOGY")
 
-        compiler = {"loss":"categorical_crossentropy", "optimizer":"keras.optimizers.Adam(lr=0.005)", "metrics":["accuracy"]}
+        compiler = {"loss":"binary_crossentropy", "optimizer":"keras.optimizers.Adam(lr=0.005)", "metrics":["accuracy", keras.metrics.Precision(name='precision'),
+                                                                                                            keras.metrics.F1Score(name='f1'),
+                                                                                                            keras.metrics.Recall(name='recall')
+                                                                                                                 
+                                                                                                                 ]}
 
         # Set configurations for full training session (final training)
         es = EarlyStopping(monitor='val_acc', mode='auto', verbose=1, patience=15)
@@ -182,6 +187,20 @@ class CoDeepNEAT:
 
         # TODO Fix retraining best model architecture
         print(f"Best fitting model {best_individual.name}")
+        print(f"Best fitting model chosen for retraining: {best_individual.name}")
+
+        # new_model = keras.models.clone_model(best_individual.model)
+        # compiler_dict = compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
+        # new_model.compile(**compiler_dict)
+
+        # best_individual.model = new_model
+
+        # new_model.summary()
+        # print('older model')
+        # individual.model.summary()
+        # input("crash")
+      #  input("Before train full")
+      #  population.train_full_model(best_individual, final_model_training_epochs, validation_split, None)
         # retrainign doesnt work
         # try:
         #     print(f"Best fitting model chosen for retraining: {best_model.name}")
@@ -189,8 +208,7 @@ class CoDeepNEAT:
         #     population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
         # except Exception  as e:
         #     print(e)
-
-        #     population.individuals.remove(best_model)
+        #     # population.individuals.remove(best_model)
         #     best_model = population.return_best_individual()
         #     print(f"Best fitting model chosen for retraining: {best_model.name}")
         #     population.train_full_model(best_model, final_model_training_epochs, validation_split, None)
