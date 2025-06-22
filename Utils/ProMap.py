@@ -20,6 +20,12 @@ class ProductsDatasets:
         'promapenext' : 'promapenext',
         'amazonext' : 'promapmulti_amazon_ext',
     }
+    PROMAP_DATASETS = {
+        'google' : 'amazon-google',
+        'walmart' : "amazon-walmart",
+        'promapcz' : 'promapcz',
+        'promapen' : 'promapen',
+    }
     
     @staticmethod
     def Load_by_name(name : str, match_columns :Dataset|None = None, remove_columns : list[str]|None = None) -> Dataset:
