@@ -90,26 +90,26 @@ class NeatConfigParser:
         
         elif method == HYPERNEAT_METHOD:
             return {
-                ("NEAT", 'fitness_criterion'): 'max',
+                ("NEAT", 'fitness_criterion'): 'min',
                 ("NEAT", 'no_fitness_termination'): True,
-                ("NEAT", 'fitness_threshold'): 970,
+                ("NEAT", 'fitness_threshold'): 2,
                 ("NEAT", 'pop_size'): 150,
-                ("NEAT", 'reset_on_extinction'): True,
+                ("NEAT", 'reset_on_extinction'): False,
                 
-                ("DefaultStagnation", 'species_fitness_func'): 'max',
+                ("DefaultStagnation", 'species_fitness_func'): 'min',
                 ("DefaultStagnation", 'max_stagnation'): 20,
                 ("DefaultStagnation", 'species_elitism'): 10,
 
                 ("DefaultReproduction", 'elitism'): 15,
                 ("DefaultReproduction", 'survival_threshold'): 0.20,
 
-                ("DefaultGenome", 'activation_default'): 'sigmoid',
-                ("DefaultGenome", 'activation_mutate_rate'): 0.01,
-                ("DefaultGenome", 'activation_options'): 'sigmoid',
+                ("DefaultGenome", 'activation_default'): 'tanh',
+                ("DefaultGenome", 'activation_mutate_rate'): 0.5,
+                ("DefaultGenome", 'activation_options'): 'gauss sin tanh',
 
                 ("DefaultGenome", 'aggregation_default'): 'sum',
                 ("DefaultGenome", 'aggregation_mutate_rate'): 0.0,
-                ("DefaultGenome", 'aggregation_options'): 'gauss sin tanh sigmoid relu',
+                ("DefaultGenome", 'aggregation_options'): 'sum',
 
                 ("DefaultGenome", 'bias_init_mean'): 0.0,
                 ("DefaultGenome", 'bias_init_stdev'): 1.0,
