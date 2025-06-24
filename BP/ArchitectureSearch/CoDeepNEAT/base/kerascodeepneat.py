@@ -135,6 +135,7 @@ class Module(object):
     def update_weighted_scores(self):
 
         if len(self.score_log) > 0:
+
             avg_test_loss = np.array(self.score_log)[:,0].mean()
             avg_test_acc = np.array(self.score_log)[:,1].mean()
             self.weighted_scores = [avg_test_loss, avg_test_acc]
@@ -213,8 +214,7 @@ class Blueprint:
             avg_test_loss = np.array(self.score_log)[:,0].mean()
             avg_test_acc = np.array(self.score_log)[:,1].mean()
             self.weighted_scores = [avg_test_loss, avg_test_acc]
-        else:
-            pass
+
 
     def simple_crossover(self, parent_2, mark):
         
@@ -467,11 +467,14 @@ class Individual:
         self.model = keras.models.Model(inputs=model_input, outputs=layer_map[max(layer_map)][-1])
         # TODO FIX error
         self.model.compile(**self.compiler)
+
         try:
             plot_model(self.model, to_file=f'{self._save_path}/gen{generation}_blueprint_{self.blueprint.mark}_layer_level_graph_parent1id{self.blueprint.parents[0].mark}_parent2id{self.blueprint.parents[1].mark}.png', show_shapes=True, show_layer_names=True)
         except:
-            plot_model(self.model, to_file=f'{self._save_path}/gen{generation}_blueprint_{self.blueprint.mark}_layer_level_graph.png', show_shapes=True, show_layer_names=True)
-        
+            try: # Try chack if dot returns code -6
+                plot_model(self.model, to_file=f'{self._save_path}/gen{generation}_blueprint_{self.blueprint.mark}_layer_level_graph.png', show_shapes=True, show_layer_names=True)
+            except:
+                pass
      #   input(f'genmerating {self} {self.compiler}')
 
 
@@ -481,6 +484,9 @@ class Individual:
         """
         # fit(input_x, input_y, training_epochs, validation_split, current_generation="final", custom_fit_args=None)
         logging.info(f"Fitting one individual for {training_epochs} epochs")
+        print(f"Fitting one individual for {training_epochs} epochs")
+      #  if current_generation == 'final':
+          #  input('crashing')
         self.generate(generation=current_generation)
 
         if custom_fit_args is not None:
@@ -629,7 +635,12 @@ class Population:
 }
         #compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
         for n in range(size):
-            compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy"]}
+            compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(learning_rate=0.005), "metrics":["accuracy",
+  #  keras.metrics.Precision(name='precision'),
+  #  keras.metrics.Recall(name='recall'),
+      #  keras.metrics.F1Score(name='f1_score')         
+            
+            ]}
             #Create a blueprint
             input_shape = self.input_shape
             new_blueprint = self.return_random_blueprint()
@@ -1153,16 +1164,17 @@ class Population:
         
         logging.log(21, f"\n -------------------------------------------- \n")
 
-    def train_full_model(self, individual, training_epochs, validation_split, custom_fit_args=None):
+    def train_full_model(self, individual : Individual, training_epochs, validation_split, custom_fit_args=None):
 
         logging.info(f"Training {individual.name} for {training_epochs} epochs. Blueprint: {individual.blueprint.mark}.")
-
+        
         #(batch, channels, rows, cols)
         input_x = self.datasets.training[0]
         input_y = self.datasets.training[1]
         test_x = self.datasets.test[0]
         test_y = self.datasets.test[1]
         # HACK: changed custom fit args to none instead of custom fit args
+
         history = individual.fit(input_x, input_y, training_epochs, validation_split, current_generation="final", custom_fit_args=None)
 
         score = individual.score(test_x, test_y)
@@ -1481,42 +1493,3 @@ class GraphOperator:
 
         return new_graph
     
-
-class Compiler:
-    def __init__(self, optimizer_config, loss_config, metrics_config):
-        self._optimizer_config = optimizer_config
-        self._loss_config = loss_config
-        self._metrics_config = metrics_config
-
-    def compile_model(self, model_to_compile):
-        """
-        Compiles the given Keras model with a NEW optimizer instance.
-        """
-        print(f"DEBUG: Compiling model: {model_to_compile.name if hasattr(model_to_compile, 'name') else 'Unnamed Model'}")
-
-
-        optimizer_type_str = self._optimizer_config.get('name', 'Adam')
-        optimizer_params = {k: v for k, v in self._optimizer_config.items() if k != 'name'} # Exclude 'name' from params
-
-        if optimizer_type_str.lower() == 'adam':
-            current_optimizer_instance = keras.optimizers.Adam(**optimizer_params)
-        elif optimizer_type_str.lower() == 'sgd':
-            current_optimizer_instance = keras.optimizers.SGD(**optimizer_params)
-        elif optimizer_type_str.lower() == 'rmsprop':
-            current_optimizer_instance = keras.optimizers.RMSprop(**optimizer_params)
-        else:
-            raise ValueError(f"Unsupported optimizer type in config: {optimizer_type_str}")
-
-        print(f"DEBUG: Created a NEW optimizer instance: {current_optimizer_instance.name}")
-
-        # Get loss and metrics
-        loss_function = keras.losses.get(self._loss_config['name']) if isinstance(self._loss_config, dict) else self._loss_config
-        metrics_list = [keras.metrics.get(m) if isinstance(m, str) else m for m in self._metrics_config]
-
-        # Compile the model with the NEW optimizer
-        model_to_compile.compile(
-            optimizer=current_optimizer_instance,
-            loss=loss_function,
-            metrics=metrics_list
-        )
-        print(f"DEBUG: Model {model_to_compile.name if hasattr(model_to_compile, 'name') else 'Unnamed Model'} compiled successfully.")
