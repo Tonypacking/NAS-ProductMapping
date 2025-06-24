@@ -13,7 +13,6 @@ import gc
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-
 class RandomSearch:
     def __init__(self, args:argparse):
         self.hyper_parameters = RandomSearchParser()
@@ -39,13 +38,13 @@ class RandomSearch:
             self.layer_type_probab = self.layer_type_probab / np.sum(self.layer_type_probab)
 
     def RunRandomSearch(self):
-        
-        for genration in range(self.hyper_parameters.n_sampled_networks):
+
+        for generation in range(self.hyper_parameters.n_sampled_networks):
 
 
-            logger.info(f"Creating {genration}. netowrk")
+            logger.info(f"Creating {generation}. netowrk")
             data_shape = self.dataset.train_set.shape[1:]
-            random_model = self._sample_random_network(data_shape,np.unique(self.dataset.train_targets.shape).size, network_id="Random_model_{genration}")
+            random_model = self._sample_random_network(data_shape,np.unique(self.dataset.train_targets.shape).size, network_id=f"Random_model_{generation}")
 
             random_model.compile(
             loss='binary_crossentropy',
@@ -53,7 +52,7 @@ class RandomSearch:
             metrics=['accuracy', 'recall', 'precision']
             )
 
-            logger.info(f"Fitting {genration}. netowrk")
+            logger.info(f"Fitting {generation}. netowrk")
             callback = keras.callbacks.TensorBoard(
                 histogram_freq=0,
                 log_dir="logs/fit/"
@@ -63,10 +62,10 @@ class RandomSearch:
 
             random_model.fit(self.dataset.train_set, self.dataset.train_targets, batch_size=32)
             del random_model
-
-            keras.backend.clear_session()
-            tf.compat.v1.reset_default_graph()
-            gc.collect()
+            keras.backend.clear_session(free_memory=True)
+            gc.collect()    
+           # tf.compat.v1.reset_default_graph()
+            # gc.collect()
 
            # if self.best_network:
           #      self.best_network = ...
@@ -250,5 +249,6 @@ if __name__ == "__main__":
     
     parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=METHOD_CHOICES, help='Selects the method of NAS.')
     rs = RandomSearch(parser.parse_args())
+
 
     rs.RunRandomSearch()
