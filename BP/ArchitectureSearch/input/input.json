@@ -12,19 +12,33 @@
     {
         "training_epochs" :"2",
         "final_training_epochs" : "5",
-        "minimum_hidden_layer_size" : "2",
-        "maximum_hidden_layer_size" : "3",
+        "minimum_hidden_layer_size" : "10",
+        "maximum_hidden_layer_size" : "20",
         "possible_activations" : ["relu", "tanh", "sigmoid"],
-        "sampled_networks" : "4",
-        "layer_size": [32,64,128],
+        "sampled_networks" : "100",
 
-        "dense_probability" : "0.4",
-        "pooling_probability": "0.6",
-        "pool_size_choice" : [1,2],
-        "pool_strides_choice" : [1,2],
-        "pool_types" : ["max", "avg"]
+        "dense_probability" : "0.75",
+        "dense_layer_size": [32,64,128],
+
+        "minimum_small_layer_resize" : "4",
+        "resize_layer_value" : "64",
 
 
+        "pooling_probability": "0.10",
+        "pool_size_choice" : [1,2,2],
+        "pool_strides_choice" : [1,2,3],
+        "pool_types" : ["max", "avg"],
+        
+        "conv_probability" : "0.10",
+        "conv_filters" : [1,2,3],
+        "conv_kernel_sizes" : [2],
+        "conv_strides" : [1,2,3],
+        "conv_act_functions" : ["relu", "tanh"],
+        "conv_types" : ["conv", "separable", "depth", "transpose"],
+
+        "dropout_probability" : "0.5",
+        "dropout_min_rate" : "0.25",
+        "dropout_max_rate" : "0.75"
     },
 
     "HyperNEAT":
