@@ -19,14 +19,17 @@ class RandomSearch:
         self.hyper_parameters = RandomSearchParser()
         self.hyper_parameters.parse_config(args.input)
         self.dataset = ProductsDatasets.Load_by_name(args.dataset)
-        self.layer_types = ['pooling', 'dense']
+        self.layer_types = ['pooling', 'dense', 'convolution', "dropout"]
         self.layer_type_probab = [
             self.hyper_parameters.pooling_probability,
-            self.hyper_parameters.dense_probability
+            self.hyper_parameters.dense_probability,
+            self.hyper_parameters.conv_probability,
+            self.hyper_parameters.dropout_probability
             ]
         
-
-
+        if len(self.layer_type_probab) != len(self.layer_types):
+            raise ValueError(f"{len(self.layer_type_probab)} != {len(self.layer_types)}")
+        
         if np.sum(self.layer_type_probab) == 0:
             raise ValueError(f"sum of selected pobabilites is 0")
         
@@ -49,36 +52,29 @@ class RandomSearch:
         n_hidden_layers = np.random.randint(low=self.hyper_parameters.minimul_hidden_layer_size, high=self.hyper_parameters.maximum_hidden_layer_size)
         model = keras.Sequential(name=network_id)
         model.add(keras.layers.Input(shape=input_shape, name='input'))
+        
         previous_layer = None
-        for i in range(3):
-            #select_label = np.random.choice(self.layer_types, p=self.layer_type_probab)
-            a = ['dense', 'pooling', 'pooling'] # mock list remove and use random choice
-            select_label = a[i]
-            input(select_label)
+       
+        for i in range(n_hidden_layers):
+            
+            select_label =  np.random.choice(self.layer_types, p=self.layer_type_probab)
+
+           # input(select_label)
             match select_label:
+
                 case 'pooling':
-
-                    pooling_type = np.random.choice(self.hyper_parameters.pool_types)
-                    strides = (np.random.choice(self.hyper_parameters.pool_strides_choice),)
-                    size = (np.random.choice(self.hyper_parameters.pool_size_choice),)
-                    if not model.layers :
-                        model.add(keras.layers.Reshape((input_shape[0], 1), input_shape=(input_shape,))) # Added input_shape to first layer
-                    else:
-                        if previous_layer == 'dense':
-                            model.add(keras.layers.Reshape((model.output_shape[1], 1), input_shape = (model.output_shape[1], ))) # Added input_shape to first layer
-
-                    if pooling_type == 'max':
-                        model.add(keras.layers.MaxPool1D(strides=strides, pool_size=size))
-                    else: # else average pooling
-                        model.add(keras.layers.AveragePooling1D(strides=strides, pool_size=size))
-
+                    self._add_pooling_layer(model,i, previous_layer=previous_layer, input_shape=input_shape)
                     previous_layer = 'pooling'
+
+                case "convolution":
+                    self._add_conv_layer(model, i,previous_layer=previous_layer, input_shape=input_shape)
+                    previous_layer = "conv"
+
+                case "dropout":
+                    self._add_dropout_layer(model, i)
+                    previous_layer = "dropout"
                 case _: # defualt selected layer is dense
-                    model.add(keras.layers.Flatten())
-                    layer_size = np.random.choice(self.hyper_parameters.dense_layer_size)
-                    act_func = np.random.choice(self.hyper_parameters.possible_activations)
-                    model.add(keras.layers.Dense(layer_size,activation=act_func, name=f"hidden_{i}"))
-                    print(f"{layer_size=}")
+                    self._add_dense_layer(model,id=i)
                     previous_layer = 'dense'
 
 
@@ -91,6 +87,69 @@ class RandomSearch:
             metrics=['accuracy', 'recall', 'precision']
             )
         return model
+    
+    def _add_dense_layer(self,model, id, layer_size = None):
+        print(f"{id} dense")
+        model.add(keras.layers.Flatten())
+        layer_size = np.random.choice(self.hyper_parameters.dense_layer_size) if layer_size is None else layer_size
+        act_func = np.random.choice(self.hyper_parameters.possible_activations)
+        model.add(keras.layers.Dense(layer_size,activation=act_func, name=f"hidden_{id}"))
+
+    def _add_pooling_layer(self, model, id, previous_layer, input_shape):
+        pooling_type = np.random.choice(self.hyper_parameters.pool_types)
+        strides = (np.random.choice(self.hyper_parameters.pool_strides_choice),)
+        size = (np.random.choice(self.hyper_parameters.pool_size_choice),)
+        
+        if model.layers and model.output_shape[1] <= self.hyper_parameters.resize_small_layer:
+            # model is too small expand it by adding dense layer
+            logger.info(msg=f"pooling_layer is too small, extending it to {self.hyper_parameters.resize_layer_value} ")
+            previous_layer = "dense"
+            self._add_dense_layer(model,f"extending_pooling_layer_with_dense{id}",self.hyper_parameters.resize_layer_value)
+
+
+        if not model.layers :
+            model.add(keras.layers.Reshape((input_shape[0], 1), input_shape=(input_shape,))) # Added input_shape to first layer
+        else:
+            if previous_layer == 'dense':
+                model.add(keras.layers.Reshape((model.output_shape[1], 1), input_shape = (model.output_shape[1], ))) # Added input_shape to first layer
+
+        if pooling_type == 'max':
+            model.add(keras.layers.MaxPool1D(strides=strides, pool_size=size, name=f"MaxPool_{id}"))
+        else: # else average pooling
+            model.add(keras.layers.AveragePooling1D(strides=strides, pool_size=size,name=f"AveragePool_{id}"))
+
+    def _add_conv_layer(self, model, id, previous_layer, input_shape):
+        filter = np.random.choice(self.hyper_parameters.conv_filters)
+        kernel = (np.random.choice(self.hyper_parameters.conv_kernel_sizes),)
+        strides = (np.random.choice(self.hyper_parameters.conv_strides),)
+        act_function = np.random.choice(self.hyper_parameters.conv_act_functions)
+        convolution_type = np.random.choice(self.hyper_parameters.conv_types)
+
+        if model.layers and model.output_shape[1] <= self.hyper_parameters.resize_small_layer:
+            # model is too small expand it by adding dense layer
+            logger.info(msg=f"pooling_layer is too small, extending it to {self.hyper_parameters.resize_layer_value} ")
+            previous_layer = "dense"
+            self._add_dense_layer(model,f"extending_conv_layer_with_dense{id}",self.hyper_parameters.resize_layer_value)
+
+        if not model.layers :
+            model.add(keras.layers.Reshape((input_shape[0], 1), input_shape=(input_shape,))) # Added input_shape to first layer
+        else:
+            if previous_layer == 'dense':
+                model.add(keras.layers.Reshape((model.output_shape[1], 1), input_shape = (model.output_shape[1], ))) # Added input_shape to first layer
+        if convolution_type == "separable":
+            model.add(keras.layers.SeparableConv1D(filters=filter, kernel_size=kernel, activation=act_function, strides=strides, name=f"SeparableConv1D_{id}"))
+        elif convolution_type == "depth":
+            model.add(keras.layers.DepthwiseConv1D(kernel_size=kernel, activation=act_function, strides=strides, name=f"DepthwiseConv1D_{id}"))
+        elif convolution_type == "transpose":
+            model.add(keras.layers.Conv1DTranspose(filters=filter, kernel_size=kernel, activation=act_function, strides=strides, name=f"Conv1DTranspose_{id}"))
+        else:
+            model.add(keras.layers.Conv1D(filters=filter, kernel_size=kernel, activation=act_function,strides=strides, name=f"Conv1D_{id}"))
+        # print(f"{convolution_type=}, {strides=} {kernel=} {filter=}, {model.output_shape}")
+    
+    def _add_dropout_layer(self, model, id):
+        rate = np.random.uniform(low=self.hyper_parameters.dropout_min_rate, high=self.hyper_parameters.dropout_max_rate)
+        model.add(keras.layers.Dropout(rate=rate, name=f"Dropout_rate_{rate:.3f}_{id}"))
+
     def validate(self):
         pass
     
