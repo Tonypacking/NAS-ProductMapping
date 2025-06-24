@@ -42,7 +42,7 @@ class RandomSearchParser:
             raise ValueError('Config is not loaded')
         # dense layers hyper params
         self.dense_probability = float(file_content["dense_probability"])
-        self.dense_layer_size = [int(n) for n in file_content['layer_size']]
+        self.dense_layer_size = [int(n) for n in file_content['dense_layer_size']]
         
         # pooling layers hyper params
         self.pooling_probability = float(file_content["pooling_probability"])
