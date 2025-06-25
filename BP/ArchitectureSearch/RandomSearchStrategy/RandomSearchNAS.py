@@ -8,7 +8,7 @@ import sklearn.metrics
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets, Dataset
 import argparse
-from RandomSearchParser import RandomSearchParser
+from RandomSearchStrategy.RandomSearchParser import RandomSearchParser
 import logging
 import tensorflow as tf
 import gc
@@ -53,6 +53,8 @@ class RandomSearch:
         if args.dimension_reduction:
             self._transformer = self._dataset.reduce_dimensions(args.dimension_reduction)
 
+        self.training_parameters  = f"dense_prob-{self.hyper_parameters.dense_probability} conv_prob-{self.hyper_parameters.conv_probability} dropout_prob-{self.hyper_parameters.dropout_probability} pooling_prob-{self.hyper_parameters.pooling_probability}"
+
     def RunRandomSearch(self):
         n_targets = len(np.unique(self._dataset.train_targets))
         # targets = keras.utils.to_categorical(self._dataset.train_targets, num_classes=n_targets)
@@ -65,7 +67,7 @@ class RandomSearch:
             if generation != 0 and generation % CLEAR_MEMORY_INTERVAL == 0:    
                 logger.debug(msg="Clearing keras memory and calling gc.collect")
                 keras.backend.clear_session(free_memory=True)
-                tf.compat.v1.reset_default_graph()
+                # tf.compat.v1.reset_default_graph()
                 gc.collect()   
            
             random_model = self._sample_random_network(data_shape, n_targets, network_id=f"Random_model_{generation}")
@@ -85,6 +87,15 @@ class RandomSearch:
         
         self.best_network.summary()
 
+    def Plot_best_model(self, name, file_type = '.svg'):
+        if not self.best_network:
+            logger.warning(f"No model to be plotted")
+            return
+        
+        keras.utils.plot_model(self.best_network, to_file=name+file_type, show_layer_names=False, show_layer_activations=True, show_shapes=True)
+
+    def Save_model(self, name):
+        self.best_network.save(name)
 
     def _compare_models(self, sampled_model:keras.models.Sequential):
         """Compares best model with sampled model based on f1 score if sampled model has better f1 score replaces best model with sampled model.
@@ -284,12 +295,12 @@ class RandomSearch:
             return outputs
         
 
-
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.WARNING,
         format='- %(name)s - %(levelname)s - %(message)s',
     )
+
     NEAT_METHOD = 'BasicNEAT'
     ALL = 'all'
     NORMAL_PROMAP = 'promap'
@@ -329,6 +340,4 @@ if __name__ == "__main__":
     
     parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=METHOD_CHOICES, help='Selects the method of NAS.')
     rs = RandomSearch(parser.parse_args())
-
-
     rs.RunRandomSearch()
