@@ -6,6 +6,7 @@ import csv
 import pandas as pd
 import sklearn.metrics
 from Utils.ProMap import ProductsDatasets
+from RandomSearchStrategy import RandomSearchNAS
 import argparse
 import NeuroEvolution
 import NeatConfigParser
@@ -22,12 +23,14 @@ ALL = 'all'
 NORMAL_PROMAP = 'promap'
 HYPERNEAT_METHOD = 'HyperNEAT'
 CODEAPNEAT_METHOD = 'CoDeepNEAT'
-METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD]
+RANDOMSEARCH_METHOD = "RandomSearch"
+METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD, RANDOMSEARCH_METHOD]
 
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
 CODEEPNEAT_DIRECTORY = "CoDeepNEAT"
+RANDOMSEARCH_DIRECTORY = "RandomSearch"
 
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
@@ -91,6 +94,12 @@ def main(args: argparse.Namespace):
             logger.info("Running CoDeepNEAT for dataset: {dataset}")
             CoDeepNeat(args)
             logger.info(f"Finished CoDeepNEAT for dataset: {dataset}")
+        if args.NAS_method == RANDOMSEARCH_METHOD or args.NAS_method == ALL:
+            logger.info(f"Running Random search for dataset: {dataset}")
+            RandomSearch(args=args)
+            logger.info(f"Finished Random search for dataset: {dataset}")
+
+
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
     """Writes global resutls to a args.output/global_results.csv file.
@@ -350,6 +359,44 @@ def CoDeepNeat(args: argparse.Namespace):
             # Save results to global results too
             Write_Global_Result(args, row)
 
+def RandomSearch(args: argparse.Namespace):
+    used_preprocessing = "_"
+
+    if args.scale:
+        used_preprocessing += 'Standard_Scaling_'
+
+    used_preprocessing += args.dimension_reduction
+
+    output_path = os.path.join(args.output, RANDOMSEARCH_DIRECTORY, args.dataset + used_preprocessing)
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
+
+    random_search = RandomSearchNAS.RandomSearch(args=args)
+    random_search.RunRandomSearch()
+
+    if args.validate_all:
+        outputs = random_search.validate_all()
+    else:
+        outputs = [(args.dataset, random_search.validate())]
+    rs_path = os.path.join(output_path, f"{RANDOMSEARCH_DIRECTORY}_local_scores.csv")
+
+    mode = "w" if not os.path.exists(rs_path) or args.remove_global_results or os.path.getsize(rs_path) == 0 else "a"
+
+    with open(rs_path, mode) as f:
+        # Create csv writer and write header
+        csw_writer = csv.writer(f)
+        if mode == "w":
+            csw_writer.writerow(CSV_HEADER)  
+
+        for dataset_name, output in outputs:
+            # Save to local results
+            row = [args.dataset, dataset_name,args.scale,args.dimension_reduction,RANDOMSEARCH_METHOD,random_search.training_parameters, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+            csw_writer.writerow(row)
+            # Save results to global results too
+            Write_Global_Result(args, row)
+
+    model_save_file = os.path.join(output_path,f"{RANDOMSEARCH_DIRECTORY}_model")
+    random_search.Plot_best_model(model_save_file, file_type='.png')
 
 if __name__ == "__main__":
 
