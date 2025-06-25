@@ -3,6 +3,8 @@ import numpy as np
 import random # For generating random numbers
 import enum
 import sys, os
+
+import sklearn.metrics
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..','..'))) # To load Utils module
 from Utils.ProMap import ProductsDatasets, Dataset
 import argparse
@@ -10,14 +12,21 @@ from RandomSearchParser import RandomSearchParser
 import logging
 import tensorflow as tf
 import gc
+import sklearn
+from typing import Sequence, Optional
+import Utils.ProMap as ProMap
+
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+CLEAR_MEMORY_INTERVAL = 15 # in RUN RANDOM SEARCH every 15th iteration keras memory and heap is cleared
 
 class RandomSearch:
     def __init__(self, args:argparse):
         self.hyper_parameters = RandomSearchParser()
         self.hyper_parameters.parse_config(args.input)
-        self.dataset = ProductsDatasets.Load_by_name(args.dataset)
+        self._dataset = ProductsDatasets.Load_by_name(args.dataset)
         self.layer_types = ['pooling', 'dense', 'convolution', "dropout"]
         self.layer_type_probab = [
             self.hyper_parameters.pooling_probability,
@@ -26,53 +35,76 @@ class RandomSearch:
             self.hyper_parameters.dropout_probability
             ]
         self.best_network = None
-
+        self._scaler = None
+        self._transformer = None
         if len(self.layer_type_probab) != len(self.layer_types):
             raise ValueError(f"{len(self.layer_type_probab)} != {len(self.layer_types)}")
         
-        if np.sum(self.layer_type_probab) == 0:
-            raise ValueError(f"sum of selected pobabilites is 0")
+        if np.sum(self.layer_type_probab) <= 0:
+            raise ValueError(f"sum of selected pobabilites is less than or equal to zero")
         
         if np.sum(self.layer_type_probab) != 1:
             logger.warning(f"sum of probabilities: {self.layer_type_probab} isnt 1, normalizing it")
             self.layer_type_probab = self.layer_type_probab / np.sum(self.layer_type_probab)
 
-    def RunRandomSearch(self):
+        if args.scale:
+            self._scaler = self._dataset.scale_features()
 
+        if args.dimension_reduction:
+            self._transformer = self._dataset.reduce_dimensions(args.dimension_reduction)
+
+    def RunRandomSearch(self):
+        n_targets = len(np.unique(self._dataset.train_targets))
+        # targets = keras.utils.to_categorical(self._dataset.train_targets, num_classes=n_targets)
+        targets = self._dataset.train_targets
         for generation in range(self.hyper_parameters.n_sampled_networks):
 
-
             logger.info(f"Creating {generation}. netowrk")
-            data_shape = self.dataset.train_set.shape[1:]
-            random_model = self._sample_random_network(data_shape,np.unique(self.dataset.train_targets.shape).size, network_id=f"Random_model_{generation}")
+            data_shape = self._dataset.train_set.shape[1:]
+
+            if generation != 0 and generation % CLEAR_MEMORY_INTERVAL == 0:    
+                logger.debug(msg="Clearing keras memory and calling gc.collect")
+                keras.backend.clear_session(free_memory=True)
+                tf.compat.v1.reset_default_graph()
+                gc.collect()   
+           
+            random_model = self._sample_random_network(data_shape, n_targets, network_id=f"Random_model_{generation}")
 
             random_model.compile(
             loss='binary_crossentropy',
-            optimizer=keras.optimizers.Adam(learning_rate=0.05),
+            optimizer=keras.optimizers.Adam(learning_rate=0.001),
             metrics=['accuracy', 'recall', 'precision']
             )
 
             logger.info(f"Fitting {generation}. netowrk")
-            callback = keras.callbacks.TensorBoard(
-                histogram_freq=0,
-                log_dir="logs/fit/"
-            )
-            random_model.summary()
             logger.info(f"Fitting {random_model.name}")
 
-            random_model.fit(self.dataset.train_set, self.dataset.train_targets, batch_size=32)
-            del random_model
-            keras.backend.clear_session(free_memory=True)
-            gc.collect()    
-           # tf.compat.v1.reset_default_graph()
-            # gc.collect()
+            random_model.fit(self._dataset.train_set, targets , batch_size=32, epochs=self.hyper_parameters.training_epochs)
 
-           # if self.best_network:
-          #      self.best_network = ...
-         #   else: self.best_network = random_model
+            self._compare_models(random_model)
+        
+        self.best_network.summary()
 
+
+    def _compare_models(self, sampled_model:keras.models.Sequential):
+        """Compares best model with sampled model based on f1 score if sampled model has better f1 score replaces best model with sampled model.
+
+        Args:
+            sampled_model (keras.models.Sequential): new model to be compared with the best model
+        """
+        if not self.best_network: # No best network
+            self.best_network = sampled_model
+            return
+        
+        best_network_result = self.validate()
+        sampled_network_result = self.validate(model=sampled_model)
+
+        if sampled_network_result['f1_score'] > best_network_result['f1_score']:
+            self.best_network = sampled_model
+            logger.info(msg=f"New best model found with f1_score{sampled_network_result['f1_score'] }")
 
     def _sample_random_network(self, input_shape, n_classes, network_id = 'None'):
+
         n_hidden_layers = np.random.randint(low=self.hyper_parameters.minimul_hidden_layer_size, high=self.hyper_parameters.maximum_hidden_layer_size)
         model = keras.Sequential(name=f"{network_id}")
         model.add(keras.layers.Input(shape=input_shape, name='input'))
@@ -105,7 +137,7 @@ class RandomSearch:
 
         # create output layer with softmax 
         model.add(keras.layers.Flatten())
-        model.add(keras.layers.Dense(n_classes, activation='sigmoid', name='Output'))
+        model.add(keras.layers.Dense(1, activation='sigmoid', name='Output'))
 
         return model
     
@@ -189,20 +221,68 @@ class RandomSearch:
         model.add(keras.layers.Dropout(rate=rate, name=f"Dropout_rate_{rate:.3f}_{id}"))
         logger.debug(f"dropout {model.output_shape=}")
         return "dropout" 
-    
+        
+    def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None, model: Optional[keras.models.Sequential| None] = None) -> dict[str, float]:
+            """Va;odates best network against unseen data.
 
-    def validate(self,train_data, test_data, model = None):
-        if not model:
-            model = self.best_network
-        return
-        {
+            Args:
+                test_set (Optional[Sequence], optional): testing set. Defaults to None.
+                target_set (Optional[Sequence], optional): testing true outpiut. Defaults to None.
 
-        }
-    
-    def validate_all(self):
-        pass
+            Returns:
+                dict[str, float]: dictionary of name of a metric and metric's value
+            """
 
-    
+            if not model:
+                model = self.best_network
+
+            if test_set is None and target_set is None:
+                predicted = model.predict(self._dataset.test_set)
+                target_set = self._dataset.test_targets
+                
+
+            elif (test_set is None and target_set is not None) or (test_set is not None and target_set is None):
+                assert ValueError("Invalid test set or target set")
+            else:
+                predicted = model.predict(test_set)
+            predicted = np.round(predicted).astype(int)
+
+           # predicted = np.argmax(predicted, axis=1)
+            return {
+                'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
+                'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
+                'precision' : sklearn.metrics.precision_score(y_pred=predicted, y_true=target_set),
+                'recall' : sklearn.metrics.recall_score(y_pred=predicted, y_true=target_set),
+                'confusion_matrix' : sklearn.metrics.confusion_matrix(y_pred=predicted, y_true=target_set),
+                'balanced_accuracy': sklearn.metrics.balanced_accuracy_score(y_pred=predicted, y_true=target_set),
+            } 
+            
+    def validate_all(self) -> list[tuple[str, dict[str, float]]]:
+            """Validates against all promap datasets if feature count is the same.
+            Resises the testing dataset to match the training dataset's feature columns.
+
+            Returns:
+                list[tuple[str, dict[str, float]]]: List of tuples with name of tested dataset and dictionary of metric and metrics value.
+            """
+            outputs = []
+            for name in ProMap.ProductsDatasets.NAME_MAP:
+                tested_dataset= ProMap.ProductsDatasets.Load_by_name(name)
+
+                if tested_dataset.feature_labels.shape < self._dataset.feature_labels.shape:
+                    tested_dataset.extend_dataset(self._dataset)
+
+                elif tested_dataset.feature_labels.shape > self._dataset.feature_labels.shape:
+                    tested_dataset.reduce_dataset(self._dataset)
+
+                if self._scaler:
+                    tested_dataset.test_set = self._scaler.transform(tested_dataset.test_set)
+                    
+                if self._transformer:
+                    tested_dataset.test_set = self._transformer.transform(tested_dataset.test_set)
+
+                outputs.append((tested_dataset.dataset_name, self.validate(tested_dataset.test_set, tested_dataset.test_targets)))
+            return outputs
+        
 
 
 if __name__ == "__main__":
