@@ -1,3 +1,4 @@
+
 import keras
 import numpy as np
 import random # For generating random numbers
@@ -66,7 +67,12 @@ class RandomSearch:
 
             if generation != 0 and generation % CLEAR_MEMORY_INTERVAL == 0:    
                 logger.debug(msg="Clearing keras memory and calling gc.collect")
-                keras.backend.clear_session(free_memory=True)
+                # from numba import cuda
+                # cuda.select_device(0) # Select GPU device
+                # cuda.close() # Close GPU device
+                keras.backend.clear_session() # Clear keras memory
+                tf.keras.backend.clear_session(free_memory=True)
+                
                 # tf.compat.v1.reset_default_graph()
                 gc.collect()   
            
@@ -84,7 +90,20 @@ class RandomSearch:
             random_model.fit(self._dataset.train_set, targets , batch_size=32, epochs=self.hyper_parameters.training_epochs)
 
             self._compare_models(random_model)
-        
+
+        best_model = keras.Model.from_config(self.best_network.model.get_config())
+            
+        best_model.compile(
+            loss='binary_crossentropy',
+            optimizer=keras.optimizers.Adam(learning_rate=0.001),
+            metrics=['accuracy', 'recall', 'precision']
+            )
+                                                                
+        print(f"Retraining best network architecture for epochs: {self.hyper_parameters.final_training_epochs}")                                                                          
+        best_model.fit(self._dataset.train_set, targets , batch_size=32, epochs=self.hyper_parameters.final_training_epochs)
+
+        self.best_network = best_model
+
         self.best_network.summary()
 
     def Plot_best_model(self, name, file_type = '.svg'):
@@ -113,6 +132,8 @@ class RandomSearch:
         if sampled_network_result['f1_score'] > best_network_result['f1_score']:
             self.best_network = sampled_model
             logger.info(msg=f"New best model found with f1_score{sampled_network_result['f1_score'] }")
+            return
+        
 
     def _sample_random_network(self, input_shape, n_classes, network_id = 'None'):
 
