@@ -2,7 +2,7 @@ import configparser
 import itertools
 import os
 import json
-from main import  NEAT_METHOD, HYPERNEAT_METHOD
+from main import  NEAT_METHOD, ES_HYPERNEAT_METHOD, HYPER_NEAT_METHOD
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -88,7 +88,7 @@ class NeatConfigParser:
                 ("DefaultSpeciesSet", 'compatibility_threshold'): 3.0
                 }
         
-        elif method == HYPERNEAT_METHOD:
+        elif method == ES_HYPERNEAT_METHOD or method == HYPER_NEAT_METHOD:
             return {
                 ("NEAT", 'fitness_criterion'): 'min',
                 ("NEAT", 'no_fitness_termination'): True,
