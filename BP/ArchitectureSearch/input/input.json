@@ -10,15 +10,15 @@
     },
     "RandomSearch":
     {
-        "training_epochs" :"2",
-        "final_training_epochs" : "5",
-        "minimum_hidden_layer_size" : "10",
+        "training_epochs" :"25",
+        "final_training_epochs" : "100",
+        "minimum_hidden_layer_size" : "2",
         "maximum_hidden_layer_size" : "20",
         "possible_activations" : ["relu", "tanh", "sigmoid"],
-        "sampled_networks" : "100",
+        "sampled_networks" : "50",
 
         "dense_probability" : "0.75",
-        "dense_layer_size": [32,64,128],
+        "dense_layer_size": [32,64,128, 256],
 
         "minimum_small_layer_resize" : "4",
         "resize_layer_value" : "64",
@@ -36,7 +36,7 @@
         "conv_act_functions" : ["relu", "tanh"],
         "conv_types" : ["conv", "separable", "depth", "transpose"],
 
-        "dropout_probability" : "0.5",
+        "dropout_probability" : "0.05",
         "dropout_min_rate" : "0.25",
         "dropout_max_rate" : "0.75"
     },
@@ -49,6 +49,17 @@
             "pop_size" : [500,300]
         }
     },
+
+    "ESHyperNEAT":
+    {
+
+    "NEAT":
+        {
+            "pop_size" : [500,300]
+        }
+    },
+
+
     "CoDeepNEAT":
     {
         "args":{
