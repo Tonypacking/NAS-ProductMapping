@@ -18,19 +18,22 @@ import random
 import logging
 # TODO import hyperNEAT and ES hyperNEAT
 from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import CoDeepNEAT
+from BP.ArchitectureSearch.TraditionalNAS.TraditionalNAS import Gridsearch_NAS
 NEAT_METHOD = 'BasicNEAT'
 ALL = 'all'
 NORMAL_PROMAP = 'promap'
 HYPERNEAT_METHOD = 'HyperNEAT'
 CODEAPNEAT_METHOD = 'CoDeepNEAT'
 RANDOMSEARCH_METHOD = "RandomSearch"
-METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD, RANDOMSEARCH_METHOD]
+TRADITIONAL_NAS_METHOD = 'TraditionalSearch'
+METHOD_CHOICES = [ALL,NEAT_METHOD, HYPERNEAT_METHOD, CODEAPNEAT_METHOD, RANDOMSEARCH_METHOD, TRADITIONAL_NAS_METHOD]
 
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
 HYPERNEAT_DIRECTORY = 'HyperNEAT'
 CODEEPNEAT_DIRECTORY = "CoDeepNEAT"
 RANDOMSEARCH_DIRECTORY = "RandomSearch"
+TRADITIONAL_DIRECTORY = "Traditional_NAS"
 
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
@@ -98,7 +101,10 @@ def main(args: argparse.Namespace):
             logger.info(f"Running Random search for dataset: {dataset}")
             RandomSearch(args=args)
             logger.info(f"Finished Random search for dataset: {dataset}")
-
+        if args.NAS_method == TRADITIONAL_NAS_METHOD or args.NAS_method == ALL:
+            logger.info(f"Running Traditional NAS for dataset: {dataset}")
+            TraditionalSearch(args=args)
+            logger.info(f"Finished Traditional NAS for dataset: {dataset}")
 
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
@@ -398,6 +404,48 @@ def RandomSearch(args: argparse.Namespace):
     model_save_file = os.path.join(output_path,f"{RANDOMSEARCH_DIRECTORY}_model")
     random_search.Plot_best_model(model_save_file, file_type='.png')
 
+
+def TraditionalSearch(args: argparse.Namespace):
+    used_preprocessing = "_"
+
+    if args.scale:
+        used_preprocessing += 'Standard_Scaling_'
+
+    used_preprocessing += args.dimension_reduction
+
+    output_path = os.path.join(args.output, TRADITIONAL_DIRECTORY, args.dataset + used_preprocessing)
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
+    model_directory = os.path.join(output_path, 'Models')
+    if not os.path.isdir(model_directory):
+        os.makedirs(model_directory, exist_ok=True)
+        
+    traditional_nas = Gridsearch_NAS(args)
+    traditional_nas.runNAS(model_directory)
+
+    if args.validate_all:
+        outputs = traditional_nas.validate_all()
+    else:
+        outputs = [(args.dataset, traditional_nas.validate())]
+
+    trad_path = os.path.join(output_path, f"{TRADITIONAL_DIRECTORY}_local_scores.csv")
+
+    mode = "w" if not os.path.exists(trad_path) or args.remove_global_results or os.path.getsize(trad_path) == 0 else "a"
+
+    with open(trad_path, mode) as f:
+        # Create csv writer and write header
+        csw_writer = csv.writer(f)
+        if mode == "w":
+            csw_writer.writerow(CSV_HEADER)  
+
+        for dataset_name, output in outputs:
+            # Save to local results
+            row = [args.dataset, dataset_name,args.scale,args.dimension_reduction,TRADITIONAL_NAS_METHOD,traditional_nas.best_params, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+            csw_writer.writerow(row)
+            # Save results to global results too
+            Write_Global_Result(args, row)
+
+
 if __name__ == "__main__":
 
     logging.basicConfig(
@@ -425,7 +473,7 @@ if __name__ == "__main__":
     
     # dataset arguments
     available_datasets = list(ProductsDatasets.NAME_MAP.keys()) + [ALL, NORMAL_PROMAP]
-    parser.add_argument('--dataset', '--d',default='promapcz', type=str.lower, choices=available_datasets, help='name of promap dataset or path')
+    parser.add_argument('--dataset', '--d',default=NORMAL_PROMAP, type=str.lower, choices=available_datasets, help='name of promap dataset or path')
     # output arguments
     logger.debug(f"{available_datasets}")
     parser.add_argument('--output', '--o', type=str.lower, default='output', help='Output directory name.')
