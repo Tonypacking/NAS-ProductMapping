@@ -40,10 +40,8 @@ class Gridsearch_NAS:
                 'tanh', 
                 'logistic'
                 ],
-            'solver': [
-                'adam', 
-                'sgd'],
-            'alpha': [0.0001, 0.01, 1.0],
+            'learning_rate_init': [0.0001, 0.01],
+            "learning_rate": ['constant', 'invscaling', 'adaptive'],
 
 
         }
