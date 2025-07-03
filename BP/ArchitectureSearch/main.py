@@ -250,10 +250,12 @@ def Neat_Nas(args: argparse.Namespace):
     best_networks.sort(key=lambda x: x[0], reverse=True)
     best_networks_path = os.path.join(neat_dir,'best_networks',evolution.dataset_name+used_preprocessing)
 
-    # if not os.path.isdir(best_networks_path):
-    #     os.makedirs(best_networks_path, exist_ok=True)
+    if not os.path.isdir(best_networks_path):
+        os.makedirs(best_networks_path, exist_ok=True)
+        
+    path = os.path.join(best_networks_path, 'best_networks.neat')
 
-    with open(best_networks_path+'_best.neat', mode='w') as f :
+    with open(path, mode='w') as f :
         for rank, (value, path) in enumerate(best_networks[: args.kbest], start=1):
             f.write(f"Rank: {rank} with f1_score: {value}.   Attributes: {path}\n")
 
@@ -365,6 +367,7 @@ def HyperNeatNas(args: argparse.Namespace):
         used_preprocessing += args.dimension_reduction
 
         output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
+        
         evolution.RunHyperNEAT(args.iterations, args.parallel)
 
         if args.validate_all:
@@ -464,6 +467,7 @@ def RandomSearch(args: argparse.Namespace):
         outputs = random_search.validate_all()
     else:
         outputs = [(args.dataset, random_search.validate())]
+
     rs_path = os.path.join(output_path, f"{RANDOMSEARCH_DIRECTORY}_local_scores.csv")
 
     mode = "w" if not os.path.exists(rs_path) or args.remove_global_results or os.path.getsize(rs_path) == 0 else "a"
@@ -483,6 +487,8 @@ def RandomSearch(args: argparse.Namespace):
 
     model_save_file = os.path.join(output_path,f"{RANDOMSEARCH_DIRECTORY}_model")
     random_search.Plot_best_model(model_save_file, file_type='.png')
+    model_save = os.path.join(output_path, f"{RANDOMSEARCH_DIRECTORY}_random_model")
+    random_search.Save_model(model_save)
 
 def TraditionalSearch(args: argparse.Namespace):
     used_preprocessing = "_"
@@ -544,7 +550,8 @@ if __name__ == "__main__":
 
     # HyperNEAT arguments
     parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
-    parser.add_argument('--hyper_layers', '--hl', default=2, type=int, help='Number of hidden layers in the hyperneat network. Default is 2.')
+    parser.add_argument('--hyper_layers', '--hl', default=[[32,16,8,4], [128,64], [256]], type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
+
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
