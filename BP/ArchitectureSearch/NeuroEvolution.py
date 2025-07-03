@@ -493,7 +493,7 @@ class HyperNEATEvolution:
 
             predictions = np.array([self._predict_data(network=net, x=x, activations=self.activations) for x in self._dataset.train_set])
             #predictions = np.round(predictions)
-            genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
+            genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 100
  
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:

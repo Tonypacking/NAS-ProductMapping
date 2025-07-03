@@ -90,17 +90,17 @@ class NeatConfigParser:
         
         elif method == ES_HYPERNEAT_METHOD or method == HYPER_NEAT_METHOD:
             return {
-                ("NEAT", 'fitness_criterion'): 'min',
+                ("NEAT", 'fitness_criterion'): 'max',
                 ("NEAT", 'no_fitness_termination'): True,
                 ("NEAT", 'fitness_threshold'): 2,
                 ("NEAT", 'pop_size'): 150,
                 ("NEAT", 'reset_on_extinction'): False,
                 
-                ("DefaultStagnation", 'species_fitness_func'): 'min',
-                ("DefaultStagnation", 'max_stagnation'): 20,
-                ("DefaultStagnation", 'species_elitism'): 10,
+                ("DefaultStagnation", 'species_fitness_func'): 'max',
+                ("DefaultStagnation", 'max_stagnation'): 15,
+                ("DefaultStagnation", 'species_elitism'): 1,
 
-                ("DefaultReproduction", 'elitism'): 15,
+                ("DefaultReproduction", 'elitism'): 2,
                 ("DefaultReproduction", 'survival_threshold'): 0.20,
 
                 ("DefaultGenome", 'activation_default'): 'tanh',

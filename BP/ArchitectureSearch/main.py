@@ -354,7 +354,6 @@ def HyperNeatNas(args: argparse.Namespace):
         if not os.path.isdir(hyperNEAT_dir):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
-
         for layers in args.hyper_layers:
             evolution = NeuroEvolution.HyperNEATEvolution(config,hidden_layers=layers, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
             #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
@@ -403,13 +402,13 @@ def HyperNeatNas(args: argparse.Namespace):
                     # save network to the best network
                     best_networks.append((output['f1_score'], dataset_name+used_preprocessing+'_'+folder_name))
 
-        # Plot NN statistics and network
-        #evolution.plot_network(os.path.join(output_path,'BestNetwork'))
-        import matplotlib.pyplot as plt
-        plt.close('all') # ensure everything is closed
-        evolution.plot_statistics(os.path.join(output_path,'Statistics'))
-        evolution.plot_CPPN_network(os.path.join(output_path,'CPPN'))
-        evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
+            # Plot NN statistics and network
+            #evolution.plot_network(os.path.join(output_path,'BestNetwork'))
+            import matplotlib.pyplot as plt
+            plt.close('all') # ensure everything is closed
+            evolution.plot_statistics(os.path.join(output_path,'Statistics'))
+            evolution.plot_CPPN_network(os.path.join(output_path,'CPPN'))
+            evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
 
 def CoDeepNeat(args: argparse.Namespace):
 
@@ -552,9 +551,9 @@ if __name__ == "__main__":
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in neat')
 
     # HyperNEAT arguments
-    default_layer_size = [[32,16,8,4], [128,64], [256]]
+    default_layer_size = [ [8,4,2], [16,8]] # [64,32]
     parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
-    parser.add_argument('--hyper_layers', '--hl', default=[[2,4],[8]], type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
+    parser.add_argument('--hyper_layers', '--hl', default=default_layer_size, type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
 
 
     # dataset preprocessing arguments
