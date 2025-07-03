@@ -12,6 +12,7 @@ import argparse
 from RandomSearchStrategy.RandomSearchParser import RandomSearchParser
 import logging
 import tensorflow as tf
+from tensorflow import keras
 import gc
 import sklearn
 from typing import Sequence, Optional
@@ -91,8 +92,10 @@ class RandomSearch:
 
             self._compare_models(random_model)
 
-        best_model = keras.Model.from_config(self.best_network.model.get_config())
-            
+
+
+        best_model =  self.best_network
+
         best_model.compile(
             loss='binary_crossentropy',
             optimizer=keras.optimizers.Adam(learning_rate=0.001),
@@ -114,6 +117,7 @@ class RandomSearch:
         keras.utils.plot_model(self.best_network, to_file=name+file_type, show_layer_names=False, show_layer_activations=True, show_shapes=True)
 
     def Save_model(self, name):
+        name +=".keras"
         self.best_network.save(name)
 
     def _compare_models(self, sampled_model:keras.models.Sequential):
