@@ -448,20 +448,28 @@ class HyperNEATEvolution:
         self.input_coord = [tuple(coord) for coord in input_coord]
         self.hidden_cord = [[(-0.5, 0.5), (0.5, 0.5)], [(-0.5, -0.5), (0.5, -0.5)]]
 
-        self.output_coord = [( -1.0,1.0), (1.0, -1.0)]
-        
+        self.hidden_cord = self._create_hidden_coordinates(hidden_layers)
+
+        self.output_coord = [( -1,1), (1, -1)]
+
         self.activations = len(self.hidden_cord) + 2
         self._substrate = Substrate(self.input_coord, self.output_coord, self.hidden_cord)
         # create Config for genome
         self._population = neat.Population(self._neat_config)
     
-    # def _create_hidden_coordinates(self, hidden_layers):
-    #     for i in range(hidden_layers):
-    #         x_coords = np.linspace(0, 1, hidden_layers)
-    #         y_coords = np.linspace(0, 1, hidden_layers)
 
-    #         hidden_coord = np.column_stack((x_coords, y_coords)).tolist()
-    #         self.hidden_cord.extend([tuple(coord) for coord in hidden_coord])
+    def _create_hidden_coordinates(self, hidden_layers):
+        hidden_coordinates = []
+        for indx, layer_size in enumerate(hidden_layers):
+            logger.debug(f"Layer {indx} size {layer_size}")
+            x_cord = np.linspace(start=indx, stop=indx+1, num=layer_size, endpoint=False)
+            y_cord = np.linspace(start=indx, stop=indx+1, num=layer_size, endpoint=False)
+            input_coord = np.column_stack((x_cord, y_cord)).tolist()
+            x = [tuple(coord) for coord in input_coord]
+            hidden_coordinates.append(x)
+
+        return hidden_coordinates
+    
 
     def _predict_data(self, network, x, activations):
 
@@ -523,7 +531,6 @@ class HyperNEATEvolution:
 
         self._best_CPPPN = neat.nn.FeedForwardNetwork.create(self._neat_winner, self._neat_config)
         self._best_network_architecture = HyperNEAT.hyperneat.create_phenotype_network(cppn=self._best_CPPPN, substrate=self._substrate)
-
 
         return self._best_CPPPN, self._best_network_architecture
     
@@ -636,5 +643,3 @@ class HyperNEATEvolution:
             return # nothing to vizualize
         visualize.plot_stats(self._statistics, filename=save_path, view=view)
         
-   # def draw_network(self, save_path):
-        #draw_net(self.)

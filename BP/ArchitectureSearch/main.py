@@ -354,51 +354,54 @@ def HyperNeatNas(args: argparse.Namespace):
         if not os.path.isdir(hyperNEAT_dir):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
-        evolution = NeuroEvolution.HyperNEATEvolution(config,hidden_layers=args.hyper_layers, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
-        #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
-        # extract used parameters and save it as a folder name in which we will save our results.
-        folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
-        used_preprocessing = '_'
+        for layers in args.hyper_layers:
+            evolution = NeuroEvolution.HyperNEATEvolution(config,hidden_layers=layers, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+            #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
-        if args.scale:
-            used_preprocessing += 'Standard_Scaling_'
+            # extract used parameters and save it as a folder name in which we will save our results.
+            folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
+            folder_name += f'_layers_{layers}'
+            used_preprocessing = '_'
 
-        used_preprocessing += args.dimension_reduction
+            if args.scale:
+                used_preprocessing += 'Standard_Scaling_'
 
-        output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
-        
-        evolution.RunHyperNEAT(args.iterations, args.parallel)
+            used_preprocessing += args.dimension_reduction
 
-        if args.validate_all:
-            outputs = evolution.validate_all()
-        else:
-            outputs = [(evolution.dataset_name, evolution.validate())]
+            output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
+
+            evolution.RunHyperNEAT(args.iterations, args.parallel)
+
+            if args.validate_all:
+                outputs = evolution.validate_all()
+            else:
+                outputs = [(evolution.dataset_name, evolution.validate())]
 
 
-        if not os.path.isdir(output_path):
-            os.makedirs(output_path, exist_ok=True)
+            if not os.path.isdir(output_path):
+                os.makedirs(output_path, exist_ok=True)
 
-        with open(os.path.join(output_path, f'{folder_name}_local_scores.csv'), mode='w') as f:
-            # Create csv writer and write header
-            csw_writer = csv.writer(f)
-            csw_writer.writerow(CSV_HEADER)   
+            with open(os.path.join(output_path, f'{folder_name}_local_scores.csv'), mode='w') as f:
+                # Create csv writer and write header
+                csw_writer = csv.writer(f)
+                csw_writer.writerow(CSV_HEADER)   
 
-            confusion_matrix_path = os.path.join(output_path, 'confusion_matrices')
-            if not os.path.isdir(confusion_matrix_path):
-                os.makedirs(confusion_matrix_path, exist_ok=True) 
+                confusion_matrix_path = os.path.join(output_path, 'confusion_matrices')
+                if not os.path.isdir(confusion_matrix_path):
+                    os.makedirs(confusion_matrix_path, exist_ok=True) 
 
-            for dataset_name, output in outputs:
-                # Save to local results
+                for dataset_name, output in outputs:
+                    # Save to local results
 
-                row = [data.dataset_name, dataset_name,args.scale,args.dimension_reduction,HYPER_NEAT_METHOD,folder_name, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
-                csw_writer.writerow(row)
-                # Save results to global results too
-                Write_Global_Result(args, row)
+                    row = [data.dataset_name, dataset_name,args.scale,args.dimension_reduction,HYPER_NEAT_METHOD,folder_name, output['f1_score'], output['accuracy'], output['precision'], output['recall'], output['balanced_accuracy']]
+                    csw_writer.writerow(row)
+                    # Save results to global results too
+                    Write_Global_Result(args, row)
 
-                Plot_Confusion_Matrix(output['confusion_matrix'], confusion_matrix_path, evolution.dataset_name, dataset_name)
-                # save network to the best network
-                best_networks.append((output['f1_score'], dataset_name+used_preprocessing+'_'+folder_name))
+                    Plot_Confusion_Matrix(output['confusion_matrix'], confusion_matrix_path, evolution.dataset_name, dataset_name)
+                    # save network to the best network
+                    best_networks.append((output['f1_score'], dataset_name+used_preprocessing+'_'+folder_name))
 
         # Plot NN statistics and network
         #evolution.plot_network(os.path.join(output_path,'BestNetwork'))
@@ -549,8 +552,9 @@ if __name__ == "__main__":
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in neat')
 
     # HyperNEAT arguments
+    default_layer_size = [[32,16,8,4], [128,64], [256]]
     parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
-    parser.add_argument('--hyper_layers', '--hl', default=[[32,16,8,4], [128,64], [256]], type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
+    parser.add_argument('--hyper_layers', '--hl', default=[[2,4],[8]], type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
 
 
     # dataset preprocessing arguments
