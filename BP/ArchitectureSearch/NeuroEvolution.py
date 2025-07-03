@@ -220,7 +220,7 @@ class ESHyperNEATEvolution:
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
-        self._fitness_scaling = 1 # minus 100 becase we want to maximize NLL
+        self._fitness_scaling = 1_000 
         self._transformer = None
         self._scaler = None
         self._substrate = None
@@ -265,16 +265,17 @@ class ESHyperNEATEvolution:
             esnetwork = ESNetwork(self._substrate, cppn, self._params)
 
             rec_network = esnetwork.create_phenotype_network()
+            predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)) for x in self._dataset.train_set])
 
-           # predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
-            predictions = np.array([self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0] for x in self._dataset.train_set])
-
-            loss = sklearn.metrics.log_loss(y_true=self._dataset.train_targets, y_pred=predictions)
+            # predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
+            # predictions = np.array([self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0] for x in self._dataset.train_set])
+           # predictions = np.argmax(predictions, axis=1)
+            # loss = sklearn.metrics.log_loss(y_true=self._dataset.train_targets, y_pred=predictions)
             # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * self._fitness_scaling
-            #predictions = (predictions >= 0.5).astype(int)
+            predictions = np.round(predictions) # * self._fitness_scaling
             #score = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions)
-            genome.fitness = loss * self._fitness_scaling
-            # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
+            # genome.fitness = loss * self._fitness_scaling
+            genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
@@ -331,14 +332,14 @@ class ESHyperNEATEvolution:
         
         if test_set is None and target_set is None:
             predicted = np.array([self._activate_network(network=network,input=x, activations=activations)[0] for x in self._dataset.test_set])
-            predicted = (predicted >= 0.5).astype(int)
+            
             target_set = self._dataset.test_targets
 
         elif (test_set is None and target_set is not None) or (test_set is not None and target_set is None):
             assert ValueError("Invalid test set or target set")
         else:
             predicted = np.array([self._activate_network(network=network,input=x, activations=activations)[0] for x in test_set])
-            predicted = (predicted >= 0.5).astype(int)
+        predicted = np.round(predicted)
         return {
             'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
             'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
@@ -426,71 +427,66 @@ class ESHyperNEATEvolution:
         #draw_net(self.)
 
 
-
-
 class HyperNEATEvolution:
     
-    def __init__(self, config_path: str, version, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
+    def __init__(self, config_path: str, hidden_layers, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
-        self._fitness_scaling = -100 # minus 100 becase we want to maximize NLL
+        self._fitness_scaling = 1000
         self._transformer = None
         self._scaler = None
         self._substrate = None
         self._neat_config = self._create_config(config_path, scaling=scaling, dimension_reduction=dimension_reduction)
         self._best_network_architecture = None
         num_features = self._dataset.train_set.shape[1]
-        #generate points from -1 to 1
-        x_coords = np.linspace(start=-0.5, stop=0.5, num=num_features, endpoint=True)
-        y_coords = np.linspace(start=-0.5, stop=0.5, num=num_features, endpoint=True)
+        #generate points from -0.5 to 0.5
+        x_coords = np.linspace(start=-1, stop=0, num=num_features, endpoint=True)
+        y_coords = np.linspace(start=-1, stop=0, num=num_features, endpoint=True)
 
         input_coord = np.column_stack((x_coords, y_coords)).tolist()
         self.input_coord = [tuple(coord) for coord in input_coord]
-        # output is
+        self.hidden_cord = [[(-0.5, 0.5), (0.5, 0.5)], [(-0.5, -0.5), (0.5, -0.5)]]
+
         self.output_coord = [( -1.0,1.0), (1.0, -1.0)]
-        self._substrate = Substrate(input_coordinates=self.input_coord, output_coordinates=self.output_coord)
+        
+        self.activations = len(self.hidden_cord) + 2
+        self._substrate = Substrate(self.input_coord, self.output_coord, self.hidden_cord)
         # create Config for genome
         self._population = neat.Population(self._neat_config)
-        self._params = self._params(version=version)
     
-    def _params(self, version):
-        """
-        ES-HyperNEAT specific parameters.
-        """
-        return {"initial_depth": 0 if version == "S" else 1 if version == "M" else 2,
-                "max_depth": 1 if version == "S" else 2 if version == "M" else 3,
-                "variance_threshold": 0.03,
-                "band_threshold": 0.3,
-                "iteration_level": 5,
-                "division_threshold": 0.5,
-                "max_weight": 30.0,
-                "activation": "sigmoid"}
+    # def _create_hidden_coordinates(self, hidden_layers):
+    #     for i in range(hidden_layers):
+    #         x_coords = np.linspace(0, 1, hidden_layers)
+    #         y_coords = np.linspace(0, 1, hidden_layers)
 
-    def _activate_network(self, network, input, activations):
+    #         hidden_coord = np.column_stack((x_coords, y_coords)).tolist()
+    #         self.hidden_cord.extend([tuple(coord) for coord in hidden_coord])
+
+    def _predict_data(self, network, x, activations):
+
         network.reset()
         for _ in range(activations):
-            output = network.activate(input)
-        print(output)
-        print(np.argmax(output))
+            output = network.activate(x)
         return np.argmax(output)
 
     def _eval_genomes(self, genomes, config):
         for id, genome in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(genome, config)
-            esnetwork = ESNetwork(self._substrate, cppn, self._params)
-
-            rec_network = esnetwork.create_phenotype_network()
+            net = HyperNEAT.hyperneat.create_phenotype_network(cppn=cppn, substrate=self._substrate)
 
            # predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
-            predictions = np.array([self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)for x in self._dataset.train_set])
+            predictions = []
+            for x in self._dataset.train_set:
+                net.reset()
+                for _ in range(self.activations):
+                    output = net.activate(x)
+                predictions.append(output)
 
-            # loss = sklearn.metrics.log_loss(y_true=self._dataset.train_targets, y_pred=predictions)
-            # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * self._fitness_scaling
-            predictions = (predictions >= 0.5).astype(int)
-            score = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions)
-           #  genome.fitness = loss * self._fitness_scaling
-            # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
+            predictions = np.array([self._predict_data(network=net, x=x, activations=self.activations) for x in self._dataset.train_set])
+            #predictions = np.round(predictions)
+            genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
+ 
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
@@ -526,7 +522,8 @@ class HyperNEATEvolution:
             self._neat_winner = population.run(self._eval_genomes, generations)
 
         self._best_CPPPN = neat.nn.FeedForwardNetwork.create(self._neat_winner, self._neat_config)
-        self._best_network_architecture = ESNetwork(self._substrate, self._best_CPPPN, self._params)
+        self._best_network_architecture = HyperNEAT.hyperneat.create_phenotype_network(cppn=self._best_CPPPN, substrate=self._substrate)
+
 
         return self._best_CPPPN, self._best_network_architecture
     
@@ -540,21 +537,21 @@ class HyperNEATEvolution:
         Returns:
             dict[str, float]: dictionary of name of a metric and metric's value
         """
-        activations = self._best_network_architecture.activations
+        activations = self.activations
 
-        esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
-        network = esnetwork.create_phenotype_network()
+       #  esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
+        network =  self._best_network_architecture
         
         if test_set is None and target_set is None:
-            predicted = np.array([self._activate_network(network=network,input=x, activations=activations)[0] for x in self._dataset.test_set])
-            predicted = (predicted >= 0.5).astype(int)
+            predicted = np.array([self._predict_data(network=network,x=x, activations=activations) for x in self._dataset.test_set])
+         #   predicted = (predicted >= 0.5).astype(int)
             target_set = self._dataset.test_targets
 
         elif (test_set is None and target_set is not None) or (test_set is not None and target_set is None):
             assert ValueError("Invalid test set or target set")
         else:
-            predicted = np.array([self._activate_network(network=network,input=x, activations=activations)[0] for x in test_set])
-            predicted = (predicted >= 0.5).astype(int)
+            predicted = np.array([self._predict_data(network=network,x=x, activations=activations) for x in test_set])
+           # predicted = (predicted >= 0.5).astype(int)
         return {
             'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
             'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
@@ -607,8 +604,9 @@ class HyperNEATEvolution:
             logger.warning('HyperNEAT didnt finish ignoring plot')
             return
         logger.debug(f"Input coordinates{self.input_coord} output coordinates {self.output_coord}. Black edges are active red edges are inactive.")
-        esnetwork = ESNetwork(self._substrate, self._best_CPPPN, self._params)
-        esnetwork.create_phenotype_network(file_path)
+       # esnetwork = HyperNEAT.hyperneat.create_phenotype_network(cppn=self._best_CPPPN, substrate=self._substrate)
+        HyperNEAT.shared.draw_net(self._best_network_architecture, filename=file_path)
+
         
     def plot_CPPN_network(self, save_path :str ):
         """Plots the best genome's network
