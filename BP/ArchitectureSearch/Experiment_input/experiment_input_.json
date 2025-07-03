@@ -1,0 +1,194 @@
+{
+    "BasicNEAT":
+    {
+
+    "NEAT":
+        {
+            "pop_size" : [500,100, 1000]
+        },
+    "DefaultGenome":
+        {
+            "conn_add_prob" : [0.2,0.8],
+            "conn_delete_prob" : [0.2],
+            "node_add_prob": [0.2,0.8],
+            "node_delete_prob" : [0.2]
+        },
+        "DefaultSpeciesSet":
+        {
+            "compatibility_threshold" : [2.0]
+        }
+
+    },
+
+    
+    "HyperNEAT":
+    {
+        "NEAT":
+            {
+                "pop_size" : [50]
+            }
+
+    },
+
+    "CoDeepNEAT":
+    {
+        "args":{
+            "generations" : 15,
+            "training_epochs" : 15,
+            "population_size": 15,
+            "final_method_training_epochs" : 100,
+            "blueprint_population_size" : 15,
+            "module_population_size" : 15,
+            "n_blueprint_species" : 5,
+            "n_module_species" : 5,
+            "crossover_rate" : 0.7,
+            "mutation_rate" : 0.25,
+            "elitism_rate" : 0.15
+        }, 
+
+        "global_configs": {
+            "module_range": [
+                [
+                    1,
+                    5
+                ],
+                "int"
+            ],
+            "component_range": [
+                [
+                    1,
+                    5
+                ],
+                "int"
+            ]
+        },
+        "input_configs": {
+            "module_range": [
+                [
+                    1,
+                    1
+                ],
+                "int"
+            ],
+            "component_range": [
+                [
+                    1,
+                    1
+                ],
+                "int"
+            ]
+        },
+        "output_configs": {
+            "module_range": [
+                [
+                    1,
+                    3
+                ],
+                "int"
+            ],
+            "component_range": [
+                [
+                    1,
+                    3
+                ],
+                "int"
+            ]
+        },
+        "possible_components": {
+           
+            "dense": [
+                "Dense",
+                {
+                    "units": [
+                        [
+                            32,
+                            256
+                        ],
+                        "int"
+                    ],
+                    "activation": [
+                        [
+                            "relu"
+                        ],
+                        "list"
+                    ]
+                }
+            ]
+        },
+        "possible_inputs": {
+           "dense": [
+                "Dense",
+                {
+                    "units": [
+                        [
+                            32,
+                            256
+                        ],
+                        "int"
+                    ],
+                    "activation": [
+                        [
+                            "relu"
+                        ],
+                        "list"
+                    ]
+                }
+            ]
+        },
+        "possible_outputs": {
+            "dense": [
+                "Dense",
+                {
+                    "units": [
+                        [
+                            32,
+                            256
+                        ],
+                        "int"
+                    ],
+                    "activation": [
+                        [
+                            "relu"
+                        ],
+                        "list"
+                    ]
+                }
+            ]
+        },
+        "possible_complementary_components": {
+            "dropout": [
+                "Dropout",
+                {
+                    "rate": [
+                        [
+                            0,
+                            0.5
+                        ],
+                        "float"
+                    ]
+                }
+            ]
+        },
+        "possible_complementary_inputs": null,
+        "possible_complementary_outputs": {
+            "dense": [
+                "Dense",
+                {
+                    "units": [
+                        [
+                            2,
+                            2
+                        ],
+                        "int"
+                    ],
+                    "activation": [
+                        [
+                            "softmax"
+                        ],
+                        "list"
+                    ]
+                }
+            ]
+        }
+    }
+}
