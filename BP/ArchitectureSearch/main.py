@@ -27,7 +27,8 @@ CODEAPNEAT_METHOD = 'CoDeepNEAT'
 RANDOMSEARCH_METHOD = "RandomSearch"
 TRADITIONAL_NAS_METHOD = 'TraditionalSearch'
 HYPER_NEAT_METHOD = "HyperNEAT"
-METHOD_CHOICES = [ALL,NEAT_METHOD, ES_HYPERNEAT_METHOD, CODEAPNEAT_METHOD, RANDOMSEARCH_METHOD, TRADITIONAL_NAS_METHOD,  HYPER_NEAT_METHOD]
+HYPER_CO_DEEP_NEAT = "Both"
+METHOD_CHOICES = [ALL,NEAT_METHOD, ES_HYPERNEAT_METHOD, CODEAPNEAT_METHOD, RANDOMSEARCH_METHOD, TRADITIONAL_NAS_METHOD,  HYPER_NEAT_METHOD,HYPER_CO_DEEP_NEAT]
 
 # NAS methods directory names
 NEAT_DIRECTORY = 'NEAT'
@@ -36,6 +37,7 @@ CODEEPNEAT_DIRECTORY = "CoDeepNEAT"
 RANDOMSEARCH_DIRECTORY = "RandomSearch"
 TRADITIONAL_DIRECTORY = "Traditional_NAS"
 HYPER_NEAT_DIRECTORY = "HyperNEAT"
+
 
 CSV_HEADER = ['TRAINING_DATASET', 'TESTING_DATASET','SCALED','DIMENSION_REDUCTION','METHOD','PARAMETERS', 'F1_SCORE', 'ACCURACY', 'PRECISION', 'RECALL', 'BALANCED_ACCURACY']
 GLOBAL_FILE = 'global_results.csv'
@@ -92,16 +94,19 @@ def main(args: argparse.Namespace):
 
         if args.NAS_method == ES_HYPERNEAT_METHOD or args.NAS_method == ALL:
             logger.info(f"Running ES-HyperNEAT for dataset: {dataset}")
-            EsHyperNeatNas(args=args)
+            for size in ["M","S"]:
+                args.hyper_size = size
+                EsHyperNeatNas(args=args)
+
             logger.info(f"Finished ES-HyperNEAT for dataset: {dataset}")
 
-        if args.NAS_method == HYPER_NEAT_METHOD or args.NAS_method == ALL:
+        if args.NAS_method == HYPER_NEAT_METHOD or args.NAS_method == ALL or args.NAS_method == HYPER_CO_DEEP_NEAT:
             logger.info(f"Running HyperNEAT for dataset: {dataset}")
             #NeuroEvolution.HyperNEATEvolution(args=args)
             HyperNeatNas(args=args)
             logger.info(f"Finished HyperNEAT for dataset: {dataset}")
 
-        if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL:
+        if args.NAS_method ==CODEAPNEAT_METHOD or args.NAS_method == ALL or args.NAS_method == HYPER_CO_DEEP_NEAT:
             logger.info("Running CoDeepNEAT for dataset: {dataset}")
             CoDeepNeat(args)
             logger.info(f"Finished CoDeepNEAT for dataset: {dataset}")
@@ -116,6 +121,7 @@ def main(args: argparse.Namespace):
             TraditionalSearch(args=args)
             logger.info(f"Finished Traditional NAS for dataset: {dataset}")
 
+        
 
 def Write_Global_Result(args: argparse.Namespace, row : list):
     """Writes global resutls to a args.output/global_results.csv file.
@@ -282,11 +288,12 @@ def EsHyperNeatNas(args: argparse.Namespace):
         if not os.path.isdir(hyperNEAT_dir):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
-        evolution = NeuroEvolution.ESHyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+        evolution = NeuroEvolution.ESHyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction,fitness=args.fitness)
         #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
         # extract used parameters and save it as a folder name in which we will save our results.
         folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
+        folder_name += f" hs: {args.hyper_size} fit: {args.fitness}"
         used_preprocessing = '_'
 
         if args.scale:
@@ -295,7 +302,7 @@ def EsHyperNeatNas(args: argparse.Namespace):
         used_preprocessing += args.dimension_reduction
 
         output_path = os.path.join(hyperNEAT_dir, evolution.dataset_name+used_preprocessing, folder_name)
-        evolution.RunHyperNEAT(args.iterations, args.parallel)
+        evolution.RunESHyperNEAT(args.iterations, args.parallel)
 
         if args.validate_all:
             outputs = evolution.validate_all()
@@ -355,12 +362,12 @@ def HyperNeatNas(args: argparse.Namespace):
             os.makedirs(hyperNEAT_dir,exist_ok=True)
         
         for layers in args.hyper_layers:
-            evolution = NeuroEvolution.HyperNEATEvolution(config,hidden_layers=layers, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
+            evolution = NeuroEvolution.HyperNEATEvolution(config,hidden_layers=layers, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction,fitness=args.fitness )
             #evolution = NeuroEvolution.HyperNEATEvolution(config,version=args.hyper_size, dataset=data, scaling=args.scale, dimension_reduction=args.dimension_reduction)
 
             # extract used parameters and save it as a folder name in which we will save our results.
             folder_name = os.path.basename(config)[:-len(NeatConfigParser.NeatConfigParser.NEAT_SUFFIX)]
-            folder_name += f'_layers_{layers}'
+            folder_name += f'_layers_{layers}_{args.fitness}'
             used_preprocessing = '_'
 
             if args.scale:
@@ -551,10 +558,10 @@ if __name__ == "__main__":
     parser.add_argument('--iterations', '--iter', default=50, type=int, help='Number of generations in neat')
 
     # HyperNEAT arguments
-    default_layer_size = [ [8,4,2], [16,8]] # [64,32]
+    default_layer_size = [[16, 8], [8]] # [ [8,4,2] ] # [64,32]
     parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
     parser.add_argument('--hyper_layers', '--hl', default=default_layer_size, type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
-
+    parser.add_argument('--fitness','--fit', default='F1', type=str, choices=['F1','Acc'], help="Fitness function used in HyperNEAT")
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
