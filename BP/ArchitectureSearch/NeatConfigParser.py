@@ -157,6 +157,8 @@ class NeatConfigParser:
 
                 ("DefaultSpeciesSet", 'compatibility_threshold'): 3.0
                 }
+        
+        
     def __init__(self, directory: str):
         self._dir = directory
 
