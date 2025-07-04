@@ -175,23 +175,61 @@ class CoDeepNEAT:
 
         
         best_model = keras.Model.from_config(best_individual.model.get_config())
+
         best_model.compile(optimizer='adam', loss = 'categorical_crossentropy',metrics=[
             'accuracy',
              keras.metrics.Precision(),
              keras.metrics.Recall()    ,
                                                                 
-        print(f"Retraining best network architecture for epochs: {final_model_training_epochs}")                                                                          ])
+        print(f"Retraining best network architecture for epochs: {final_model_training_epochs}")       
+                                                                           
+                                                                                                                                              ])
         best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
+        best_model.score(x_test, y_test)
+
+        #TODO finish 
+        # history = best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
+        # score = best_model.score(x_test, y_test)
+        # individual.model.save(full_model_path)
+
+        # with open(os.path.join(self.save_directory, 'training.json'), 'w', encoding='utf-8') as f:
+        #     json.dump(history.history, f, ensure_ascii=False, indent=4)
+
+        # # summarize history for accuracy
+        # plt.plot(history.history['acc'])
+        # plt.plot(history.history['val_acc'])
+        # plt.title('model accuracy')
+        # plt.ylabel('accuracy') 
+        # plt.xlabel('epoch')
+        # plt.legend(['train', 'test'], loc='upper left')
+        # plt.tight_layout()
+
+        # plt.savefig(os.path.join(self.save_directory,"history_acc"), show_shapes=True, show_layer_names=True)
+        # plt.clf()
+
+        # # summarize history for loss
+        # plt.plot(history.history['loss'])
+        # plt.plot(history.history['val_loss'])
+        # plt.title('model loss')
+        # plt.ylabel('loss')
+        # plt.xlabel('epoch')
+        # plt.legend(['train', 'test'], loc='upper left')
+        # plt.tight_layout()
+        # plt.savefig(os.path.join(self.save_directory,"history_loss" ), show_shapes=True, show_layer_names=True)
 
         self.best_network = best_model
-
-
-
+        # TPDP save nest architecture
 
         print(f"Best fitting model {best_individual.name}")
         print(f"Best fitting model chosen for retraining: {best_individual.name}")
 
-      
+        best_model_path = os.path.join(save_path_to_codeepneat,f'BestArchitecture_{args.dataset}.keras')
+        try:
+            best_model.save(best_model_path)
+            print(f"Best model saved successfully to: {best_model_path}")
+            keras.utils.plot_model(best_model, to_file=os.path.join(save_path_to_codeepneat, f"BestArchitecture_{args.dataset}.png"), show_layer_activations=True)
+        except Exception as e:
+            print(f"Error saving model to {best_model_path}: {e}")
 
 
     def validate(self, testing_dataset: Dataset| None = None):
@@ -252,10 +290,11 @@ if __name__ == "__main__":
             try:
                 os.makedirs(os.path.dirname(dir))
             except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
+                pass
+                # if exc.errno != errno.EEXIST:
+                #     raise
 
-    create_dir("models/")
-    create_dir("images/")
+    # create_dir("models/")
+    # create_dir("images/")
     # RunCoDeepNEAT(generations, training_epochs, population_size, blueprint_population_size, module_population_size, n_blueprint_species, n_module_species, final_model_training_epochs)
     # run_cifar10_full(generations, training_epochs, population_size, blueprint_population_size, module_population_size, n_blueprint_species, n_module_species, final_model_training_epochs)
