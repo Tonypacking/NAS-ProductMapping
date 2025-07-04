@@ -216,11 +216,11 @@ class NEATEvolution:
 
 class ESHyperNEATEvolution:
     
-    def __init__(self, config_path: str, version, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
+    def __init__(self, config_path: str, version, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw', fitness = 'Acc'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
-        self._fitness_scaling = 1_000 
+        self._fitness_scaling = 100
         self._transformer = None
         self._scaler = None
         self._substrate = None
@@ -239,7 +239,9 @@ class ESHyperNEATEvolution:
         # create Config for genome
         self._population = neat.Population(self._neat_config)
         self._params = self._params(version=version)
-    
+        self._fitness = sklearn.metrics.accuracy_score if fitness=="Acc" else sklearn.metrics.f1_score
+
+
     def _params(self, version):
         """
         ES-HyperNEAT specific parameters.
@@ -265,18 +267,18 @@ class ESHyperNEATEvolution:
             esnetwork = ESNetwork(self._substrate, cppn, self._params)
 
             rec_network = esnetwork.create_phenotype_network()
-            predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)) for x in self._dataset.train_set])
-
-            # predictions = np.array([HyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
-            # predictions = np.array([self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0] for x in self._dataset.train_set])
-           # predictions = np.argmax(predictions, axis=1)
-            # loss = sklearn.metrics.log_loss(y_true=self._dataset.train_targets, y_pred=predictions)
-            # genome.fitness = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions) * self._fitness_scaling
+            predictions = np.array([ESHyperNEATEvolution._binarize_prediction(self._activate_network(network=rec_network,input=x, activations=esnetwork.activations)[0]) for x in self._dataset.train_set])
             predictions = np.round(predictions) # * self._fitness_scaling
-            #score = sklearn.metrics.f1_score(y_true=self._dataset.train_targets, y_pred=predictions)
-            # genome.fitness = loss * self._fitness_scaling
-            genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 1_000
+
+            genome.fitness = self._fitness(y_true=self._dataset.train_targets, y_pred=predictions) * 1_00
  
+    @staticmethod
+    def _binarize_prediction(x: float) -> int:
+        """
+        Binarize prediction to matching or None Matching
+        """
+        return 1 if x >= 0.5 else 0
+
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
         if scaling:
@@ -288,7 +290,7 @@ class ESHyperNEATEvolution:
 
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
 
-    def RunHyperNEAT(self, generations: int = 50, parralel: bool = False) -> tuple[neat.nn.FeedForwardNetwork,ESNetwork] :
+    def RunESHyperNEAT(self, generations: int = 50, parralel: bool = False) -> tuple[neat.nn.FeedForwardNetwork,ESNetwork] :
         """Runs the fining algorithm using HyperNEAT.
 
         Args:
@@ -429,7 +431,7 @@ class ESHyperNEATEvolution:
 
 class HyperNEATEvolution:
     
-    def __init__(self, config_path: str, hidden_layers, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
+    def __init__(self, config_path: str, hidden_layers, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw', fitness = 'F1'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
         self._best_CPPPN = None
@@ -456,7 +458,7 @@ class HyperNEATEvolution:
         self._substrate = Substrate(self.input_coord, self.output_coord, self.hidden_cord)
         # create Config for genome
         self._population = neat.Population(self._neat_config)
-    
+        self._fitness = sklearn.metrics.accuracy_score if fitness == "Acc" else sklearn.metrics.f1_score 
 
     def _create_hidden_coordinates(self, hidden_layers):
         hidden_coordinates = []
@@ -494,7 +496,7 @@ class HyperNEATEvolution:
             predictions = np.array([self._predict_data(network=net, x=x, activations=self.activations) for x in self._dataset.train_set])
             #predictions = np.round(predictions)
             genome.fitness = sklearn.metrics.accuracy_score(y_true=self._dataset.train_targets, y_pred=predictions) * 100
- 
+            genome.fitness = self._fitness(y_true=self._dataset.train_targets, y_pred=predictions) * 100
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
 
