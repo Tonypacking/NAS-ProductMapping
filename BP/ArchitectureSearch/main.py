@@ -15,6 +15,7 @@ import numpy as np
 import sklearn 
 import matplotlib.pyplot as plt
 import random
+import keras
 import logging
 # TODO import hyperNEAT and ES hyperNEAT
 from BP.ArchitectureSearch.CoDeepNEAT.NAS.CoDeapNEATProductMapping import CoDeepNEAT
@@ -72,6 +73,7 @@ def main(args: argparse.Namespace):
     """
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
+    keras.utils.set_random_seed(args.seed)
     logger.info(f"Running Neuron Architecture Search with arguments: {args}")
 
     if args.dataset == ALL:
@@ -443,7 +445,6 @@ def CoDeepNeat(args: argparse.Namespace):
 
     mode = "w" if not os.path.exists(cdn_path) or args.remove_global_results or os.path.getsize(cdn_path) == 0 else "a"
         
-
     with open(cdn_path, mode) as f:
         # Create csv writer and write header
         csw_writer = csv.writer(f)
