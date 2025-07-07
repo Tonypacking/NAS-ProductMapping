@@ -34,14 +34,17 @@ class Gridsearch_NAS:
                 (100, 50, 25),
                 (1000, 256,128,64,32,16),
                 (1000,2)    
+                #  (50, 50), (10, 50), (10, 10, 10), (50, 50, 50),(50, 10, 50) 
             ],
             'activation': [
                 'relu', 
                 'tanh', 
                 'logistic'
                 ],
-            'learning_rate_init': [0.0001, 0.01],
-            "learning_rate": ['constant', 'invscaling', 'adaptive'],
+                "alpha" : [1,0.01,0.0001],
+            "solver": ["adam", "sgd"]
+            # 'learning_rate_init': [0.0001, 0.01],
+            # "learning_rate": ['constant', 'invscaling', 'adaptive'],
 
 
         }
