@@ -74,23 +74,24 @@ class CoDeepNEAT:
         n_module_species = codeepneat_parser.n_module_species  
 
         global_configs = codeepneat_parser.Get_global_config()
+        self.training_parameters += f";global_configs-{global_configs}"
 
         input_configs = codeepneat_parser.Get_input_configs()
-
+        self.training_parameters += f";input_configs-{input_configs}"
         output_configs = codeepneat_parser.Get_output_configs()
-
+        self.training_parameters += f";-output_configs{output_configs}"
         possible_components = codeepneat_parser.Get_possible_components()
-
+        self.training_parameters += f";-possible_components{possible_components}"
         possible_inputs = codeepneat_parser.Get_Possible_inputs()
-
+        self.training_parameters += f";possible_inputs-{possible_inputs}"
         possible_outputs = codeepneat_parser.Get_possible_outputs()
-
+        self.training_parameters += f";possible_outputs-{possible_outputs}"
         possible_complementary_components = codeepneat_parser.Get_possible_complementaty_components()
-
+        self.training_parameters += f";possible_complementary_components-{possible_complementary_components}"
         possible_complementary_inputs = codeepneat_parser.Get_possible_complementary_inputs()
-
+        self.training_parameters += f";possible_complementary_inputs-{possible_complementary_inputs}"
         possible_complementary_outputs = codeepneat_parser.Get_possible_complementary_outputs()
-
+        self.training_parameters += f";possible_complementary_outputs-{possible_complementary_outputs}"
         
         num_classes = 2
 
@@ -184,8 +185,7 @@ class CoDeepNEAT:
         print(f"Retraining best network architecture for epochs: {final_model_training_epochs}")       
                                                                            
                                                                                                                                               ])
-        best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
-        best_model.score(x_test, y_test)
+        history = best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
 
         #TODO finish 
         # history = best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
@@ -228,6 +228,11 @@ class CoDeepNEAT:
             best_model.save(best_model_path)
             print(f"Best model saved successfully to: {best_model_path}")
             keras.utils.plot_model(best_model, to_file=os.path.join(save_path_to_codeepneat, f"BestArchitecture_{args.dataset}.png"), show_layer_activations=True)
+            import json
+            scores = {
+                "history" : history,
+            }
+
         except Exception as e:
             print(f"Error saving model to {best_model_path}: {e}")
 
