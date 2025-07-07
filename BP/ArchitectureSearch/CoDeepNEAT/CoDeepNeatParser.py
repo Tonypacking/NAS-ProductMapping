@@ -43,7 +43,7 @@ class CoDeepNeatParser:
         self.mutation_rate = float(args['mutation_rate'])
         self.elitism_rate = float(args['elitism_rate'])
 
-        self.parameters = f"gen-{self.generations};epochs-{self.training_epochs};pop_size-{self.population_size};mutate-{self.mutation_rate};crossover-{self.crossover_rate};module_size-{self.module_population_size};module_pop-{self.module_population_size}"
+        self.parameters = f"gen-{self.generations};epochs-{self.training_epochs};pop_size-{self.population_size};mutate-{self.mutation_rate};crossover-{self.crossover_rate};module_size-{self.module_population_size};module_pop-{self.module_population_size}; finalmethodtraining-{self.final_model_training_epoch}"
         
 
     def load_config(self,config_path: str) -> None:
