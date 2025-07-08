@@ -1,0 +1,53 @@
+Trained dataset: google
+
+Dimension reduction : lda
+             Tested dataset          Method  f1_score_binary  f1_score_macro  f1_score_micro  f1_score_weighted  precision   recall  accuracy hidden_layers
+         test_amazon_google backpropagation         0.980545        0.983862        0.984544           0.984493   1.000000 0.961832  0.984544       (16, 8)
+         test_amazon_google    evolutionary         0.980545        0.983862        0.984544           0.984493   1.000000 0.961832  0.984544       (16, 8)
+        test_amazon_walmart backpropagation         0.852273        0.872712        0.875994           0.878333   0.750000 0.986842  0.875994       (16, 8)
+        test_amazon_walmart    evolutionary         0.850662        0.871147        0.874404           0.876781   0.747508 0.986842  0.874404       (16, 8)
+           test_promapczext backpropagation         0.551724        0.603296        0.610000           0.629597   0.384000 0.979592  0.610000       (16, 8)
+           test_promapczext    evolutionary         0.547009        0.596444        0.602500           0.621656   0.379447 0.979592  0.602500       (16, 8)
+test_promapmulti_amazon_ext backpropagation         0.520000        0.573333        0.580000           0.601867   0.354086 0.978495  0.580000       (16, 8)
+test_promapmulti_amazon_ext    evolutionary         0.520000        0.573333        0.580000           0.601867   0.354086 0.978495  0.580000       (16, 8)
+           test_promapenext backpropagation         0.507614        0.514891        0.515000           0.518493   0.341297 0.990099  0.515000       (16, 8)
+           test_promapenext    evolutionary         0.506329        0.512424        0.512500           0.515441   0.340136 0.990099  0.512500       (16, 8)
+              test_promapcz backpropagation         0.538889        0.420705        0.444816           0.379993   0.370229 0.989796  0.444816       (16, 8)
+              test_promapcz    evolutionary         0.534435        0.407643        0.434783           0.363966   0.366038 0.989796  0.434783       (16, 8)
+              test_promapen backpropagation         0.507614        0.328369        0.376206           0.265546   0.341297 0.990099  0.376206       (16, 8)
+              test_promapen    evolutionary         0.506329        0.323649        0.372990           0.259623   0.340136 0.990099  0.372990       (16, 8)
+
+Dimension reduction : pca
+             Tested dataset          Method  f1_score_binary  f1_score_macro  f1_score_micro  f1_score_weighted  precision   recall  accuracy hidden_layers
+         test_amazon_google    evolutionary         0.978805        0.982306        0.982998           0.982971   0.988327 0.969466  0.982998     (8, 4, 2)
+         test_amazon_google backpropagation         0.970530        0.975711        0.976816           0.976696   1.000000 0.942748  0.976816       (16, 8)
+        test_amazon_walmart backpropagation         0.867327        0.889175        0.893482           0.895184   0.790614 0.960526  0.893482       (16, 8)
+        test_amazon_walmart    evolutionary         0.784111        0.800008        0.801272           0.804381   0.646724 0.995614  0.801272     (8, 4, 2)
+test_promapmulti_amazon_ext backpropagation         0.521739        0.579551        0.587500           0.610480   0.357143 0.967742  0.587500       (16, 8)
+test_promapmulti_amazon_ext    evolutionary         0.508475        0.559170        0.565000           0.586292   0.344828 0.967742  0.565000     (8, 4, 2)
+           test_promapczext backpropagation         0.515957        0.543356        0.545000           0.557329   0.348921 0.989796  0.545000       (16, 8)
+           test_promapenext backpropagation         0.521053        0.543860        0.545000           0.555149   0.354839 0.980198  0.545000       (16, 8)
+           test_promapczext    evolutionary         0.503856        0.517135        0.517500           0.523907   0.336770 1.000000  0.517500     (8, 4, 2)
+           test_promapenext    evolutionary         0.496241        0.497497        0.497500           0.498119   0.332215 0.980198  0.497500     (8, 4, 2)
+              test_promapen backpropagation         0.519685        0.380174        0.411576           0.331278   0.353571 0.980198  0.411576       (16, 8)
+              test_promapcz backpropagation         0.514589        0.343267        0.387960           0.284250   0.347670 0.989796  0.387960       (16, 8)
+              test_promapen    evolutionary         0.497487        0.302315        0.356913           0.233911   0.333333 0.980198  0.356913     (8, 4, 2)
+              test_promapcz    evolutionary         0.502564        0.284936        0.351171           0.209967   0.335616 1.000000  0.351171     (8, 4, 2)
+
+Dimension reduction : raw
+             Tested dataset          Method  f1_score_binary  f1_score_macro  f1_score_micro  f1_score_weighted  precision   recall  accuracy hidden_layers
+         test_amazon_google    evolutionary         0.980695        0.983904        0.984544           0.984514   0.992188 0.969466  0.984544     (8, 4, 2)
+         test_amazon_google backpropagation         0.970646        0.975744        0.976816           0.976714   0.995984 0.946565  0.976816       (16, 8)
+        test_amazon_walmart backpropagation         0.834586        0.856687        0.860095           0.862766   0.730263 0.973684  0.860095       (16, 8)
+        test_amazon_walmart    evolutionary         0.823956        0.843379        0.845787           0.848720   0.702786 0.995614  0.845787     (8, 4, 2)
+test_promapmulti_amazon_ext    evolutionary         0.531792        0.587482        0.595000           0.617276   0.363636 0.989247  0.595000     (8, 4, 2)
+test_promapmulti_amazon_ext backpropagation         0.511364        0.563718        0.570000           0.591727   0.347490 0.967742  0.570000       (16, 8)
+           test_promapczext    evolutionary         0.518519        0.543619        0.545000           0.556421   0.350000 1.000000  0.545000     (8, 4, 2)
+           test_promapenext    evolutionary         0.522193        0.541672        0.542500           0.551314   0.354610 0.990099  0.542500     (8, 4, 2)
+           test_promapenext backpropagation         0.510309        0.524572        0.525000           0.531632   0.344948 0.980198  0.525000       (16, 8)
+           test_promapczext backpropagation         0.500000        0.514563        0.515000           0.521990   0.334483 0.989796  0.515000       (16, 8)
+              test_promapen    evolutionary         0.522193        0.378251        0.411576           0.327802   0.354610 0.990099  0.411576     (8, 4, 2)
+              test_promapen backpropagation         0.508997        0.344627        0.385852           0.287019   0.343750 0.980198  0.385852       (16, 8)
+              test_promapcz    evolutionary         0.515789        0.335876        0.384615           0.273900   0.347518 1.000000  0.384615     (8, 4, 2)
+              test_promapcz backpropagation         0.505155        0.295434        0.357860           0.223190   0.337931 1.000000  0.357860       (16, 8)
+
