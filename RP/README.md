@@ -5,40 +5,77 @@
 - [Documentation](#developer-documentation)
 - [Project organisation](#project-organisation)
 ## Requirenments
+Requires at least python 3.12.3 and packages in file RP/requirenments.txt 
+
+Other python or package versions weren't tested.
+
+To get all python packages run:
+````
+ pip install -r requirements.txt
+````
 
 ## Project Organisation
 This project is split into 3 folders and analyze_prediction.py evolution_vs_backprop.py script and this README.md file.
 
-1. **### vrba_adam/RP/Examples**: This folder contains example arguments by which we run this project. 
+1. **vrba_adam/RP/Examples**: This folder contains example arguments by which we run this project. 
 2. **vrba_adam/RP/ExperimentResults**: This folder contains experiment reuslts
 3. **vrba_adam/RP/WeightSearch_Backpropagation**: 
 4. **vrba_adam/RP/WeightSearch_Evolution**: 
-5. **### vrba_adam/Data** This folder contains all datasets required for product mapping/
+5. **vrba_adam/Data** This folder contains all datasets required for product mapping/
 ## Experiment results
 
-## Usage
-Example usage can be found in Examples folder. User runs evolution_vs_backprob.py script located at vrba_adam/RP/evolution_vs_backprop.py. 
+To run a sample experiment and generate comprehensive results, follow these steps:
+
+**1. Execute the Experiment:**
+Run the following command in your terminal:
+
+```
+python3 evolution_vs_backprop.py --o ExampleRun --iter 15 --run_all all --gen 15 --sb ExampleRun/Backpropagation --se ExampleRun/Evolution
+```
+
+**2. Understanding the Output:**
+Upon successful execution, a new directory named `ExampleRun` will be created in your current working directory. This folder will contain all the experiment's best output, organized as follows:
+
+* **`ExampleRun/Backpropagation` Folder:**
+    This subdirectory will contain results and graphs visualizing the accuracy achieved by the backpropagation method for each unique combination of dataset and preprocessing technique.
+
+* **`ExampleRun/Evolution` Folder:**
+    This subdirectory will display graphs illustrating the evolution of fitness over generations for the evolutionary approach. 
+
+Backpropagation and Evolution folders will have following subdirectories with applies preprocessing methods.
+
+* **Dataset and Preprocessing Variations:** The experiment is designed to test various training datasets, applying three distinct preprocessing techniques:
+    * Linear Discriminant Analysis (LDA)
+    * Principal Component Analysis (PCA)
+    * No preprocessing (raw data)
+
+This setup allows for a clear comparison of performance across different methodologies and data preparation strategies.
+
+**3. Result comparison**
+Evolutionary algorithms can achieve test accuracies comparable to backpropagation methods. However, for larger networks, evolutionary algorithms are significantly slower than gradient-based approaches.
+# Experiment configuration
+We can edit 
 ### Arguments
 This project supports multiple arguments which edits program
 
 - #### Seed
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --seed 42
+python vrba_adam/RP/evolution_vs_backprop.py --seed 42
 ````
 ##### Description: Sets a seed to random number generation.
 
 - #### hidden_layers
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
+python vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
 ````
 ##### Description:  Allows you to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12
 
 - #### run_all
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --run_all all
+python vrba_adam/RP/evolution_vs_backprop.py --run_all all
 
 ````
 ##### Description: Allows 4 possible values
@@ -51,7 +88,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --run_all all
 - #### save_evo
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
+python vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
 
 ````
 ##### Description: OutputDirectory for evolutionary search results
@@ -59,7 +96,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
 - #### generations
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --generations
+python vrba_adam/RP/evolution_vs_backprop.py --generations
 
 ````
 ##### Description: number of generations in evolution search
