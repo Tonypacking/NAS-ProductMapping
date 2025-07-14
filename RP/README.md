@@ -1,13 +1,20 @@
-# Semestral work
+# Analysis of backpropagation and evolutionary algorithm for neural network weigth optimization
+
+In this semestral work we compare the efficacy of backpropagation, the state-of-the-art algorithm for neural network weight optimization, with evolutionary algorithms to determine their efficienty, performance of trained networks in achieving optimal network weights.
+We use ProMap datasets for training neural networks.
 - [Experiment results](#experiment-results)
 - [Requirenments](#requirenments)
 - [Usage](#usage)
 - [Documentation](#developer-documentation)
 - [Project organisation](#project-organisation)
-## Requirenments
-Requires at least python 3.12.3 and packages in file RP/requirenments.txt 
 
-Other python or package versions weren't tested.
+
+
+## Requirenments
+Requires at least 3 and packages  file RP/requirenments.txt 
+Project was tested on Linux and python 3.12.
+Packages are located in  RP/requirenments.txt.
+Other versions weren't tested.
 
 To get all python packages run:
 ````
