@@ -560,9 +560,9 @@ if __name__ == "__main__":
 
     # HyperNEAT arguments
     default_layer_size = [[16, 8], [8]] # [ [8,4,2] ] # [64,32]
-    parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the hyperneat network. S - small, M - medium, L - large')
+    parser.add_argument('--hyper_size', '--hs', default='S', choices=['S', 'M', 'L'], type=str.upper, help='Size of the es hyperneat network. S - small, M - medium, L - large')
     parser.add_argument('--hyper_layers', '--hl', default=default_layer_size, type=list, help='Number of hidden layers in the hyperneat network. Default is 2.')
-    parser.add_argument('--fitness','--fit', default='F1', type=str, choices=['F1','Acc'], help="Fitness function used in HyperNEAT")
+    parser.add_argument('--fitness','--fit', default='F1', type=str, choices=['F1','Acc'], help="Fitness function used in HyperNEAT or NEAT")
 
     # dataset preprocessing arguments
     parser.add_argument('--dimension_reduction', '--dims',default='raw', choices=['raw', 'lda', 'pca'],type=str.lower, help="Specify the dimension reduction technique: 'raw', 'lda', or 'pca'")
@@ -577,13 +577,15 @@ if __name__ == "__main__":
     parser.add_argument('--validate_all', '--v', action='store_false', default=True, help="Validates input against all possible datasets. If feature count is not same, the testing dataset is extened or reduces to match the training dataset's features")
     parser.add_argument('--kbest', '--k', default=10,type=int, help='prints k best networks')
     parser.add_argument('--remove_global_results','--rg',action='store_true', default=False, help='Removes global results from global_results.csv. If not set, appends to the file.')
-    # Config generation
+    
+    # Input for config generation
     parser.add_argument('--config_directory', '--dir', default='ConfigGeneration', type=str, help='Directory name in which all generated configs are saved')
     parser.add_argument('--config_generation', '--g', default=True, action='store_false',help='Disables config generation')
     parser.add_argument('--input', '--i', type=str, default='input/input.json', help='Path to config generation input.')
     parser.add_argument('--default','--def', action='store_false', default=True, help='Disables default value generations in config.' )
     parser.add_argument('--all_files','--all', action='store_true', default=False, help='Generates configs from all .neat (.ini) files in config directory set by config_directory argument. ')
     
+    # NAS method
     parser.add_argument('--NAS_method','--nas', type=str, default=ALL, choices=METHOD_CHOICES, help='Selects the method of NAS.')
 
     main(parser.parse_args())

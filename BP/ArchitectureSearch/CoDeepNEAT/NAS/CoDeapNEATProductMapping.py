@@ -37,7 +37,8 @@ kerascodeepneat = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(kerascodeepneat)
 
 class CoDeepNEAT:
-
+    """Class for neural architecture search with CoDeepNEAT strategy
+    """
     def __init__(self):
         self.best_network: keras.models.Model = None    
         self._scaler = None
@@ -46,7 +47,12 @@ class CoDeepNEAT:
         self.training_parameters = None
 
     def RunCoDeepNEAT(self, args: argparse.Namespace, save_path_to_codeepneat ):
-        
+        """Runs CoDeepNEAT
+
+        Args:
+            args (argparse.Namespace): Users arguments
+            save_path_to_codeepneat (str): Save directory
+        """
         codeepneat_parser = CoDeepNeatParser()
         codeepneat_parser.load_config(args.input)
 
@@ -187,36 +193,6 @@ class CoDeepNEAT:
                                                                                                                                               ])
         history = best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
 
-        #TODO finish 
-        # history = best_model.fit(x_train, y_train, batch_size=batch_size, epochs=final_model_training_epochs)
-        # score = best_model.score(x_test, y_test)
-        # individual.model.save(full_model_path)
-
-        # with open(os.path.join(self.save_directory, 'training.json'), 'w', encoding='utf-8') as f:
-        #     json.dump(history.history, f, ensure_ascii=False, indent=4)
-
-        # # summarize history for accuracy
-        # plt.plot(history.history['acc'])
-        # plt.plot(history.history['val_acc'])
-        # plt.title('model accuracy')
-        # plt.ylabel('accuracy') 
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'test'], loc='upper left')
-        # plt.tight_layout()
-
-        # plt.savefig(os.path.join(self.save_directory,"history_acc"), show_shapes=True, show_layer_names=True)
-        # plt.clf()
-
-        # # summarize history for loss
-        # plt.plot(history.history['loss'])
-        # plt.plot(history.history['val_loss'])
-        # plt.title('model loss')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'test'], loc='upper left')
-        # plt.tight_layout()
-        # plt.savefig(os.path.join(self.save_directory,"history_loss" ), show_shapes=True, show_layer_names=True)
-
         self.best_network = best_model
         # TPDP save nest architecture
 
@@ -238,6 +214,16 @@ class CoDeepNEAT:
 
 
     def validate(self, testing_dataset: Dataset| None = None):
+        """Validates the best network against unseen data.
+
+        Args:
+            test_set (Optional[Sequence], optional): testing set. Defaults to None.
+            target_set (Optional[Sequence], optional): testing true outpiut. Defaults to None.
+
+        Returns:
+            dict[str, float]: dictionary of name of a metric and metric's value
+        """
+
         if testing_dataset is None:
             testing_dataset = self._train_dataset
 
@@ -245,7 +231,6 @@ class CoDeepNEAT:
         target_set = testing_dataset.test_targets
         predicted = np.argmax(self.best_network.predict(test_data), axis=1)
 
-       # print(f"accuracy: {sklearn.metrics.accuracy_score(y_pred=np.argmax(predicted,axis=1), y_true=testing_dataset.test_targets)}") 
         return {
             'f1_score' : sklearn.metrics.f1_score(y_pred=predicted, y_true=target_set),
             'accuracy' : sklearn.metrics.accuracy_score(y_pred=predicted, y_true=target_set),
@@ -279,6 +264,7 @@ class CoDeepNEAT:
             outputs.append((tested_dataset.dataset_name, self.validate(tested_dataset)))
             
         return outputs
+
 if __name__ == "__main__":
 
     generations = 2
@@ -299,7 +285,3 @@ if __name__ == "__main__":
                 # if exc.errno != errno.EEXIST:
                 #     raise
 
-    # create_dir("models/")
-    # create_dir("images/")
-    # RunCoDeepNEAT(generations, training_epochs, population_size, blueprint_population_size, module_population_size, n_blueprint_species, n_module_species, final_model_training_epochs)
-    # run_cifar10_full(generations, training_epochs, population_size, blueprint_population_size, module_population_size, n_blueprint_species, n_module_species, final_model_training_epochs)

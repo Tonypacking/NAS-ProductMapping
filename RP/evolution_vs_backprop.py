@@ -63,6 +63,7 @@ def run_all(args: argparse, validation_path):
             bp_weight_search = Backprop_Weight_Search(args)
             bp_weight_search.run(iterations=args.iterations)
             bp_weight_search.plot_bestmodel_accuracy_progress(back_path, show=False)
+
             ws_output = bp_weight_search.validate_all()
             
             ws_weights =  bp_weight_search.best_model.coefs_
@@ -180,6 +181,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
+
     if not args.analyze:
         os.makedirs(name=args.output, exist_ok=True)
         os.makedirs(name=args.save_evo,exist_ok=True)

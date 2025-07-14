@@ -5,6 +5,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 class CoDeepNeatParser:
+    """Parser for CoDeepNEAT NAS strategy
+    """
     def __init__(self):
         self.generations = None
         self.training_epochs = None
@@ -24,6 +26,11 @@ class CoDeepNeatParser:
         self._file_content = None
 
     def _load_args(self) :
+        """Loads args from JSON file
+
+        Raises:
+            ValueError: Config wasnt loaded
+        """
         if self._file_content is None:
             raise ValueError('Config is not loaded')
         

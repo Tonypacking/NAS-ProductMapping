@@ -618,18 +618,12 @@ class Population:
         new_individuals = []
 
         K.clear_session()
-        ## TODO: change the parameterization of the compiler variable.
-        # Currently here because the Optimizer needs to be instantiated in every TFGraph crated, because K.clear_session deletes it.
-        #compiler = {"loss":"categorical_crossentropy", "optimizer":keras.optimizers.Adam(lr=0.005), "metrics":["accuracy"]}
-        #compiler["optimizer"] = eval(compiler['optimizer'])
-        # TODO change this instead of optimizer use  "optimizer_config": {  # Changed "optimizer" to "optimizer_config" for clarity"name": "Adam",      # Name of the optimizer class"learning_rate": 0.005}, 
-        # and then build it
+
         compiler_config = {
     "loss": "categorical_crossentropy",
-    "optimizer_config": {  # Changed "optimizer" to "optimizer_config" for clarity
-        "name": "Adam",      # Name of the optimizer class
+    "optimizer_config": {  
+        "name": "Adam",     
         "learning_rate": 0.005
-        # You can add other Adam parameters here, e.g., "beta_1": 0.9, "beta_2": 0.999
     },
     "metrics": ["accuracy"]
 }
@@ -1043,7 +1037,6 @@ class Population:
         iteration = []
         import random
         #(batch, channels, rows, cols)
-        # Please murder me for this part I deserve it (random.sample doesn't work aaaah!!!)
 
         i = random.randint(0,self.datasets.training[0].shape[0]-self.datasets.SAMPLE_SIZE)
         j = random.randint(0,self.datasets.test[0].shape[0]-self.datasets.TEST_SAMPLE_SIZE)
@@ -1053,9 +1046,6 @@ class Population:
         test_y = self.datasets.test[1][j:j+self.datasets.TEST_SAMPLE_SIZE]
         print(f"I :Max size {self.datasets.training[0].shape}, sample size {self.datasets.SAMPLE_SIZE}")
         print(f"J: Max size {self.datasets.test[0].shape},  sample size {self.datasets.TEST_SAMPLE_SIZE}")
-
-        # i = random.randint(0,59999-self.datasets.SAMPLE_SIZE)
-        # j = random.randint(0,9999-self.datasets.TEST_SAMPLE_SIZE)
 
         for individual in self.individuals:
             if (self.datasets.custom_fit_args is not None):

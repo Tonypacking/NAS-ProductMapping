@@ -25,7 +25,8 @@ logger.setLevel(logging.INFO)
 
 
 class NEATEvolution:
-    
+    """Class for neural architecture search with NEAT strategy
+    """
     def __init__(self, config_path: str, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
@@ -215,7 +216,8 @@ class NEATEvolution:
 
 
 class ESHyperNEATEvolution:
-    
+    """Class for neural architecture search with ES HyperNEAT strategy
+    """
     def __init__(self, config_path: str, version, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw', fitness = 'Acc'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
@@ -256,12 +258,16 @@ class ESHyperNEATEvolution:
                 "activation": "sigmoid"}
 
     def _activate_network(self, network, input, activations):
+        """Predicts targets
+        """
         network.reset()
         for _ in range(activations):
             output = network.activate(input)      
         return output
 
     def _eval_genomes(self, genomes, config):
+        """Evaluates whole population 
+        """
         for id, genome in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(genome, config)
             esnetwork = ESNetwork(self._substrate, cppn, self._params)
@@ -280,7 +286,9 @@ class ESHyperNEATEvolution:
         return 1 if x >= 0.5 else 0
 
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
-
+        """
+        Creates config for ES HyperNEAT. 
+        """
         if scaling:
             self._scaler = self._dataset.scale_features()
 
@@ -430,7 +438,8 @@ class ESHyperNEATEvolution:
 
 
 class HyperNEATEvolution:
-    
+    """Class for neural architecture search with HyperNEAT strategy
+    """
     def __init__(self, config_path: str, hidden_layers, dataset:Dataset = None, scaling : bool= False, dimension_reduction : str = 'raw', fitness = 'F1'):
         self._dataset :Dataset = dataset
         self.dataset_name = self._dataset.dataset_name
@@ -461,6 +470,14 @@ class HyperNEATEvolution:
         self._fitness = sklearn.metrics.accuracy_score if fitness == "Acc" else sklearn.metrics.f1_score 
 
     def _create_hidden_coordinates(self, hidden_layers):
+        """Creates coordinates for hidden layer
+
+        Args:
+            hidden_layers (List[List]): List of hidden layers
+
+        Returns:
+            _type_: List of hidden coordinates
+        """
         hidden_coordinates = []
         for indx, layer_size in enumerate(hidden_layers):
             logger.debug(f"Layer {indx} size {layer_size}")
@@ -474,13 +491,16 @@ class HyperNEATEvolution:
     
 
     def _predict_data(self, network, x, activations):
-
+        """Predicts targets 
+        """
         network.reset()
         for _ in range(activations):
             output = network.activate(x)
         return np.argmax(output)
 
     def _eval_genomes(self, genomes, config):
+        """Evaluates whole population 
+        """
         for id, genome in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(genome, config)
             net = HyperNEAT.hyperneat.create_phenotype_network(cppn=cppn, substrate=self._substrate)
@@ -499,7 +519,7 @@ class HyperNEATEvolution:
             genome.fitness = self._fitness(y_true=self._dataset.train_targets, y_pred=predictions) * 100
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
-
+    
         if scaling:
             self._scaler = self._dataset.scale_features()
 
@@ -537,7 +557,7 @@ class HyperNEATEvolution:
         return self._best_CPPPN, self._best_network_architecture
     
     def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None) -> dict[str, float]:
-        """Va;odates best network against unseen data.
+        """Validates the best network against unseen data.
 
         Args:
             test_set (Optional[Sequence], optional): testing set. Defaults to None.

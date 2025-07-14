@@ -26,7 +26,7 @@ class Gridsearch_NAS:
             
 
     def runNAS(self, save_model_dir):
-        mlp = sklearn.neural_network.MLPClassifier(max_iter=1000, random_state=42)
+        mlp = sklearn.neural_network.MLPClassifier(max_iter=200, random_state=42)
         param_grid = {
             'hidden_layer_sizes': [
                 (50,),          
@@ -34,7 +34,6 @@ class Gridsearch_NAS:
                 (100, 50, 25),
                 (1000, 256,128,64,32,16),
                 (1000,2)    
-                #  (50, 50), (10, 50), (10, 10, 10), (50, 50, 50),(50, 10, 50) 
             ],
             'activation': [
                 'relu', 
@@ -43,10 +42,6 @@ class Gridsearch_NAS:
                 ],
                 "alpha" : [1,0.01,0.0001],
             "solver": ["adam", "sgd"]
-            # 'learning_rate_init': [0.0001, 0.01],
-            # "learning_rate": ['constant', 'invscaling', 'adaptive'],
-
-
         }
         grid_search = sklearn.model_selection.GridSearchCV(mlp, param_grid, cv=5, n_jobs=-1, verbose=2, refit=True)
         _encoder =  sklearn.preprocessing.OneHotEncoder(handle_unknown='ignore', sparse_output=False)
