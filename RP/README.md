@@ -2,6 +2,8 @@
 
 In this semestral work we compare the efficiency of backpropagation, the state-of-the-art algorithm for neural network weight optimization, with evolutionary algorithms to determine their efficienty, performance of trained networks in achieving optimal network weights.
 We use ProMap datasets for training neural networks.
+For training neural network weights, we will use the Adam optimizer from scikit-lear and the CMA-ES evolutionary strategy.
+
 
 ## Table of Contents
 - [Project organisation](#project-organisation)
