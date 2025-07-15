@@ -17,7 +17,7 @@ from keras import regularizers
 import tensorflow as tf
 tf.config.run_functions_eagerly(True)
 basepath = "./"     #"/dbfs/FileStore/"
-
+# Implementation of CoDeepNEAT taken from https://github.com/sbcblab/Keras-CoDeepNEAT
 class HistoricalMarker:
     
     def __init__(self):

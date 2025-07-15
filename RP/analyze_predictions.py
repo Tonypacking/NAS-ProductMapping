@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 class Analyzer:
-
+    
     def __init__(self, predictions_path:str, evo_search_path :str, back_search_path :str):
         self._predictions = pd.read_csv(predictions_path)
         self._metrics = ['f1_score_weighted','f1_score_binary', 'precision', 'recall', 'accuracy','f1_score_macro','f1_score_micro']

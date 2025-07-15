@@ -25,6 +25,9 @@ logger.setLevel(logging.INFO)
 CLEAR_MEMORY_INTERVAL = 15 # in RUN RANDOM SEARCH every 15th iteration keras memory and heap is cleared
 
 class RandomSearch:
+    """
+    Class for random search NAS strategy
+    """
     def __init__(self, args:argparse):
         self.hyper_parameters = RandomSearchParser()
         self.hyper_parameters.parse_config(args.input)
@@ -58,6 +61,9 @@ class RandomSearch:
         self.training_parameters  = f"dense_prob-{self.hyper_parameters.dense_probability} conv_prob-{self.hyper_parameters.conv_probability} dropout_prob-{self.hyper_parameters.dropout_probability} pooling_prob-{self.hyper_parameters.pooling_probability}"
 
     def RunRandomSearch(self):
+        """
+        Runs the random search NAS strategy
+        """
         n_targets = len(np.unique(self._dataset.train_targets))
         # targets = keras.utils.to_categorical(self._dataset.train_targets, num_classes=n_targets)
         targets = self._dataset.train_targets
@@ -110,6 +116,13 @@ class RandomSearch:
         self.best_network.summary()
 
     def Plot_best_model(self, name, file_type = '.svg'):
+        """
+        Plots the best model's architecture
+
+        Args:
+            name (str): name of the best model 
+            file_type (str, optional): file type. Defaults to '.svg'.
+        """
         if not self.best_network:
             logger.warning(f"No model to be plotted")
             return
@@ -117,6 +130,12 @@ class RandomSearch:
         keras.utils.plot_model(self.best_network, to_file=name+file_type, show_layer_names=False, show_layer_activations=True, show_shapes=True)
 
     def Save_model(self, name):
+        """
+        Saves the best NN
+
+        Args:
+            name (str): Best model name
+        """
         name +=".keras"
         self.best_network.save(name)
 
@@ -140,7 +159,17 @@ class RandomSearch:
         
 
     def _sample_random_network(self, input_shape, n_classes, network_id = 'None'):
+        """
+        Randomly assembles network architecture
 
+        Args:
+            input_shape (tuple): shape of input
+            n_classes (int): number of classes
+            network_id (str, optional): _description_. Defaults to 'None'.
+
+        Returns:
+            _type_: _description_
+        """
         n_hidden_layers = np.random.randint(low=self.hyper_parameters.minimul_hidden_layer_size, high=self.hyper_parameters.maximum_hidden_layer_size)
         model = keras.Sequential(name=f"{network_id}")
         model.add(keras.layers.Input(shape=input_shape, name='input'))
@@ -178,6 +207,17 @@ class RandomSearch:
         return model
     
     def _add_dense_layer(self,model: keras.models.Sequential, id, layer_size = None) -> str:
+        """
+        Adds dense layer to sequentional model
+
+        Args:
+            model (keras.models.Sequential): Model which is being built/
+            id (int): Id of layer
+            layer_size (int, optional): Size of dense layer. Defaults to None.
+
+        Returns:
+            str: str
+        """
         model.add(keras.layers.Flatten())
         layer_size = np.random.choice(self.hyper_parameters.dense_layer_size) if layer_size is None else layer_size
         act_func = np.random.choice(self.hyper_parameters.possible_activations)
@@ -186,7 +226,17 @@ class RandomSearch:
         return "dense"
 
     def _add_pooling_layer(self, model, id, previous_layer, input_shape):
+        """Adds pooling layer
 
+        Args:
+            model (keras.models.Sequential): Model which is being built
+            id (int): Id of layer
+            previous_layer (str): Previous layer type
+            input_shape (tuple): input shape
+
+        Returns:
+            _type_: str
+        """
         pooling_type = np.random.choice(self.hyper_parameters.pool_types)
         strides = (np.random.choice(self.hyper_parameters.pool_strides_choice),)
         size = (np.random.choice(self.hyper_parameters.pool_size_choice),)
@@ -215,6 +265,18 @@ class RandomSearch:
         return "pooling"
 
     def _add_conv_layer(self, model: keras.models.Sequential, id, previous_layer, input_shape):
+        """
+        Adds convolution layer
+
+        Args:
+            model (keras.models.Sequential): Model which is being built
+            id (int): id of this layer
+            previous_layer (str): type of previous layer
+            input_shape (tuple): input shape
+
+        Returns:
+            str: Returns conv 
+        """
         filter = np.random.choice(self.hyper_parameters.conv_filters)
         kernel = (np.random.choice(self.hyper_parameters.conv_kernel_sizes),)
         strides = (np.random.choice(self.hyper_parameters.conv_strides),)
@@ -253,13 +315,22 @@ class RandomSearch:
         # print(f"{convolution_type=}, {strides=} {kernel=} {filter=}, {model.output_shape}")
     
     def _add_dropout_layer(self, model: keras.models.Sequential, id) -> str:
+        """Adds dropout layer
+
+        Args:
+            model (keras.models.Sequential): current model which is being built
+            id (int): It of this layer
+
+        Returns:
+            str: dropout
+        """
         rate = np.random.uniform(low=self.hyper_parameters.dropout_min_rate, high=self.hyper_parameters.dropout_max_rate)
         model.add(keras.layers.Dropout(rate=rate, name=f"Dropout_rate_{rate:.3f}_{id}"))
         logger.debug(f"dropout {model.output_shape=}")
         return "dropout" 
         
     def validate(self, test_set: Optional[Sequence] = None , target_set: Optional[Sequence] = None, model: Optional[keras.models.Sequential| None] = None) -> dict[str, float]:
-            """Va;odates best network against unseen data.
+            """Validates best network against unseen data.
 
             Args:
                 test_set (Optional[Sequence], optional): testing set. Defaults to None.

@@ -11,6 +11,9 @@ from Utils.ProMap import ProductsDatasets, Dataset
 import pickle
 
 class Gridsearch_NAS:
+    """
+    Traditional NAS strategy
+    """
     def __init__(self, args):
         self._dataset = ProductsDatasets.Load_by_name(args.dataset)
         self.best_mlp_model = None
@@ -26,6 +29,12 @@ class Gridsearch_NAS:
             
 
     def runNAS(self, save_model_dir):
+        """
+        Runs traditional NAS
+
+        Args:
+            save_model_dir (str): Save directory
+        """
         mlp = sklearn.neural_network.MLPClassifier(max_iter=200, random_state=42)
         param_grid = {
             'hidden_layer_sizes': [
@@ -56,11 +65,20 @@ class Gridsearch_NAS:
             with open(model_path, 'wb') as file:
                 pickle.dump( self.best_mlp_model , file)
 
-        except Exception as e:
+        except Exception as e:            
+            print("MODEL NOT SAVED")
             return None
         
     def validate(self, test_set = None , target_set = None) -> dict[str, float]:
+        """Validates best network against unseen data.
 
+        Args:
+            test_set (Optional[Sequence], optional): testing set. Defaults to None.
+            target_set (Optional[Sequence], optional): testing true outpiut. Defaults to None.
+
+        Returns:
+            dict[str, float]: dictionary of name of a metric and metric's value
+        """
         if not self.best_mlp_model:
             return None
         

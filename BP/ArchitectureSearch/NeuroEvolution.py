@@ -519,7 +519,17 @@ class HyperNEATEvolution:
             genome.fitness = self._fitness(y_true=self._dataset.train_targets, y_pred=predictions) * 100
  
     def _create_config(self, config_path, scaling : bool = False, dimension_reduction: str = 'raw') -> neat.Config:
-    
+        """
+        Creates a NEAT configuration object.
+
+        Args:
+            config_path (str): The file path to NEAT config file.
+            scaling (bool, optional): If True, enables data scaling. Defaults to False.
+            dimension_reduction (str, optional): Specifies the type of dimension reduction to apply.
+
+        Returns:
+            neat.Config: A new NEAT configuration object.
+        """
         if scaling:
             self._scaler = self._dataset.scale_features()
 

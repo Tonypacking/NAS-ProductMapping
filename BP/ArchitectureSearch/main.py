@@ -274,7 +274,7 @@ def Neat_Nas(args: argparse.Namespace):
         logger.info(f"Best network for {dataset_name} has : {accuracy}")
 
 def EsHyperNeatNas(args: argparse.Namespace):
-    """Runs neuron architecture search using HyperNEAT.
+    """Runs neuron architecture search using ESHyperNEAT.
     Args:
         args (argparse.Namespace): User's arguments.
     """
@@ -420,7 +420,12 @@ def HyperNeatNas(args: argparse.Namespace):
             evolution.plot_best_network(os.path.join(output_path,'BestNetwork'))
 
 def CoDeepNeat(args: argparse.Namespace):
+    """
+    Runs CoDeepNEAT NAS strategy
 
+    Args:
+        args (argparse.Namespace): User's arguments
+    """
 
     used_preprocessing = "_"
 
@@ -459,6 +464,12 @@ def CoDeepNeat(args: argparse.Namespace):
             Write_Global_Result(args, row)
 
 def RandomSearch(args: argparse.Namespace):
+    """
+    Runs random NAS strategy
+
+    Args:
+        args (argparse.Namespace): User's arguments
+    """
     used_preprocessing = "_"
 
     if args.scale:
@@ -501,6 +512,12 @@ def RandomSearch(args: argparse.Namespace):
     random_search.Save_model(model_save)
 
 def TraditionalSearch(args: argparse.Namespace):
+    """
+    Runs traditional NAS
+
+    Args:
+        args (argparse.Namespace): User's arguments
+    """
     used_preprocessing = "_"
 
     if args.scale:

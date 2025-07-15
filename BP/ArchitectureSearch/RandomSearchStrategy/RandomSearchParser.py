@@ -38,6 +38,14 @@ class RandomSearchParser:
 
 
     def _load_args(self, file_content):
+        """Parses and loads args from JSON object
+
+        Args:
+            file_content (dict): JSON content
+
+        Raises:
+            ValueError: If config wasn't loaded
+        """
         if file_content is None:
             raise ValueError('Config is not loaded')
         # dense layers hyper params
@@ -81,6 +89,12 @@ class RandomSearchParser:
         self.possible_activations =  file_content['possible_activations']
         
     def parse_config(self, config_path: str) -> None:
+        """
+        Parses JSON config.
+
+        Args:
+            config_path (str): Path to JSON config file.
+        """
         with open(config_path, 'r', encoding='utf-8') as f:
             file_content = json.load(f)[self.RANDOM_SEARCH_KEY]
             self._load_args(file_content=file_content)

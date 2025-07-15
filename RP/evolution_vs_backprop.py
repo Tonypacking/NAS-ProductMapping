@@ -15,6 +15,10 @@ import csv
 from analyze_predictions import Analyzer
 
 def log_statistics(save_path: str,train_dataset:str, method: str, statistics: list[tuple[str, dict[str, float]]], append = False, dimension_reduction = None):
+    """
+    Logs statistics from backpropagation weight search or evolutionary weight search.
+    """
+
     if not append:
         header = ['Train dataset','Tested dataset', 'Method']
         if dimension_reduction:
@@ -34,6 +38,16 @@ def log_statistics(save_path: str,train_dataset:str, method: str, statistics: li
             writer.writerow( x + [v for k, v in score_dict.items() if k != 'confusion_matrix'])
 
 def run_all(args: argparse, validation_path):
+    """
+    Applies all available data preprocessing techniques to all supported datasets.
+
+    Args:
+        args (argparse.Namespace): User-provided command-line arguments.
+        validation_path (str): The file path where processing results should be stored.
+
+    Raises:
+        ValueError: If any invalid or conflicting arguments are provided by the user.
+    """
     if args.run_all == 'all':
         dims = ['raw', 'lda', 'pca']
         promap_data = ProductsDatasets.NAME_MAP.keys()
@@ -82,7 +96,12 @@ def run_all(args: argparse, validation_path):
             log_statistics(save_path=validation_path,train_dataset= dataset_name, method='evolutionary',append=append,statistics=eva_output, dimension_reduction=dim_reduction)
 
 def main(args: argparse.Namespace):
+    """
+    Main method for the experiment
 
+    Args:
+        args (argparse.Namespace): User's defined arguments
+    """
     # set random seeds
     np.random.seed(seed=args.seed)
     random.seed(args.seed)
