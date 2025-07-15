@@ -8,7 +8,7 @@ We use ProMap datasets for training neural networks.
 - [Requirenments](#Requirements)
 - [Experiment results](#experiment-results)
 - [Usage](#usage)
-- [Documentation](#developer-documentation)
+- [Developer documentation](#developer-documentation)
 
 
 
