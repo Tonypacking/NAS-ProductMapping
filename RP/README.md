@@ -35,7 +35,7 @@ To get all python packages run:
 
 To run a simple experiment and generate comprehensive results, follow these steps:
 
-## **1. Execute the Experiment:**
+## **1. Execute our Experiments:**
 Run the following command in your terminal:
 
 ```
@@ -83,7 +83,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --seed 42
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
 ````
-##### Description:  Allows user to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12
+##### Description:  Allows user to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12.
 
 - ### run_all
 ### Example:
@@ -91,10 +91,10 @@ python vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
 python vrba_adam/RP/evolution_vs_backprop.py --run_all all
 
 ````
-##### Description: Allows 4 possible values
+##### Description: Allows 4 possible values.
 - None (nothing was selected) -> runs the experiment with selected dataset, dimension reduction etc.
-- dim -> Runs the experiment with all possible dimension reduction selected
-- dataset -> Runs the experiment on all possible ProMap datasets
+- dim -> Runs the experiment with all possible dimension reduction selected.
+- dataset -> Runs the experiment on all possible ProMap datasets.
 - all -> Runs the experiment on all possible dimension reduction and datasets.
 
 
@@ -104,7 +104,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --run_all all
 python vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
 
 ````
-##### Description: OutputDirectory for evolutionary search results
+##### Description: OutputDirectory for evolutionary search results.
 
 - ### generations
 ### Example:
@@ -112,7 +112,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
 python vrba_adam/RP/evolution_vs_backprop.py --generations
 
 ````
-##### Description: number of generations in evolution search
+##### Description: number of generations in evolution search.
 
 - ### metrics
 ### Example:
@@ -136,7 +136,7 @@ python /vrba_adam/RP/evolution_vs_backprop.py -- metrics
 python /vrba_adam/RP/evolution_vs_backprop.py --iterations 50
 
 ````
-##### Description: Number of iterations in gradient_search
+##### Description: Number of iterations in gradient_search.
 
 - ### save_back
 ### Example:
@@ -144,7 +144,7 @@ python /vrba_adam/RP/evolution_vs_backprop.py --iterations 50
 python /vrba_adam/RP/evolution_vs_backprop.py --save_back
 
 ````
-##### Description: OutputDirectory for gradient search results
+##### Description: OutputDirectory for gradient search results.
 
 
 - ### dimension reduction
@@ -153,7 +153,7 @@ python /vrba_adam/RP/evolution_vs_backprop.py --save_back
 python /vrba_adam/RP/evolution_vs_backprop.py --dims raw
 
 ````
-##### Description: Dimension reduction method
+##### Description: Dimension reduction method.
 - raw -> No dimension reduction is applied.
 - lda -> LDA method is used to reduce input dimensions.
 - pca -> PCA method is used to reduce input dimensions.
@@ -180,8 +180,7 @@ python /vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
 python /vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
 
 ````
-##### Description:
- Output directory where test set accuracy of all models is saved (It is saved in validation_predictions.csv file).
+##### Description: Output directory where test set accuracy of all models is saved (It is saved in validation_predictions.csv file).
 
 
 - ### analyze
@@ -190,8 +189,7 @@ python /vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
 python /vrba_adam/RP/evolution_vs_backprop.py --analyze
 
 ````
-##### Description:
-If set searching for the best model is disabled and just reads the validation_predictions.csv
+##### Description: If set searching for the best model is disabled and just reads the validation_predictions.csv.
 
 # Developer documentation
 This project scripts are structured in 4 different folders
