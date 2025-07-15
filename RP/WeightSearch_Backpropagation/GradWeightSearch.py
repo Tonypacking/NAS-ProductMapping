@@ -12,6 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Backprop_Weight_Search:
+    """
+    Class for weight search  using backpropagation 
+    """
     def __init__(self, args: argparse.Namespace ):
         self._param_grid = {
             'hidden_layer_sizes' : args.hidden_layers,
@@ -32,6 +35,13 @@ class Backprop_Weight_Search:
             self._transformer = self._dataset.reduce_dimensions(method=args.dimension_reduction)
 
     def run(self, iterations: int, seed: int = 42, parallel = None):
+        """Runs backpropagation weight search
+
+        Args:
+            iterations (int): Number of iterations
+            seed (int, optional): Seed for random number generation. Defaults to 42.
+            parallel (_type_, optional): Parralel grid search.
+        """
         if parallel:
             parallel = -1
         
