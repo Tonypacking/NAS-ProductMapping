@@ -1,46 +1,47 @@
 # Analysis of backpropagation and evolutionary algorithm for neural network weigth optimization
 
-In this semestral work we compare the efficacy of backpropagation, the state-of-the-art algorithm for neural network weight optimization, with evolutionary algorithms to determine their efficienty, performance of trained networks in achieving optimal network weights.
+In this semestral work we compare the efficiency of backpropagation, the state-of-the-art algorithm for neural network weight optimization, with evolutionary algorithms to determine their efficienty, performance of trained networks in achieving optimal network weights.
 We use ProMap datasets for training neural networks.
+
+## Table of Contents
+- [Project organisation](#project-organisation)
+- [Requirenments](#Requirements)
 - [Experiment results](#experiment-results)
-- [Requirenments](#requirenments)
 - [Usage](#usage)
 - [Documentation](#developer-documentation)
-- [Project organisation](#project-organisation)
 
 
 
-## Requirenments
-Requires at least 3 and packages  file RP/requirenments.txt 
+## Project Organisation
+This project is split into 4 folders 2 python scripts: analyze_predictions and evolution_vs_backprop.py and finally this README.md file.
+1. **vrba_adam/RP/ExampleRun**: This folder contains experiment reuslts.
+2. **vrba_adam/RP/WeightSearch_Backpropagation**: Contains modules related to neural network training via backpropagation.
+3. **vrba_adam/RP/WeightSearch_Evolution**: Contains modules related to neural network weight optimization via evolutionary algorithms.
+4. **vrba_adam/Data** This folder contains all datasets required for product mapping.
+5. **vrba_adam//RP/analyze_predictions.py** This script analyzes the predictions of trained models.
+6. **vrba_adam/RP/evolution_vs_backprop.py** This script is the main entry point for this experiment.
+
+## Requirements
+Requires packages located at  vrba_adam/RP/requirements.txt. 
 Project was tested on Linux and python 3.12.
-Packages are located in  RP/requirenments.txt.
-Other versions weren't tested.
+Packages are located in  RP/requirements.txt.
+Other packages and OS versions weren't tested.
 
 To get all python packages run:
 ````
  pip install -r requirements.txt
 ````
+# Experiment results
 
-## Project Organisation
-This project is split into 3 folders and analyze_prediction.py evolution_vs_backprop.py script and this README.md file.
+To run a simple experiment and generate comprehensive results, follow these steps:
 
-1. **vrba_adam/RP/Examples**: This folder contains example arguments by which we run this project. 
-2. **vrba_adam/RP/ExperimentResults**: This folder contains experiment reuslts
-3. **vrba_adam/RP/WeightSearch_Backpropagation**: 
-4. **vrba_adam/RP/WeightSearch_Evolution**: 
-5. **vrba_adam/Data** This folder contains all datasets required for product mapping/
-## Experiment results
-
-To run a sample experiment and generate comprehensive results, follow these steps:
-
-**1. Execute the Experiment:**
+## **1. Execute the Experiment:**
 Run the following command in your terminal:
 
 ```
 python3 evolution_vs_backprop.py --o ExampleRun --iter 15 --run_all all --gen 15 --sb ExampleRun/Backpropagation --se ExampleRun/Evolution
 ```
-
-**2. Understanding the Output:**
+## **2. Understanding the Output:**
 Upon successful execution, a new directory named `ExampleRun` will be created in your current working directory. This folder will contain all the experiment's best output, organized as follows:
 
 * **`ExampleRun/Backpropagation` Folder:**
@@ -58,28 +59,33 @@ Backpropagation and Evolution folders will have following subdirectories with ap
 
 This setup allows for a clear comparison of performance across different methodologies and data preparation strategies.
 
-**3. Result comparison**
-Evolutionary algorithms can achieve test accuracies comparable to backpropagation methods. However, for larger networks, evolutionary algorithms are significantly slower than gradient-based approaches.
-# Experiment configuration
-We can edit 
-### Arguments
-This project supports multiple arguments which edits program
+## **3. Result comparison**
+Our experiment compared the performance of backpropagation-based weight optimization against an evolutionary weight search approach. Both methods were trained on four distinct Promap datasets. We tested configurations with and without LDA and PCA applied to hidden layers of sizes (8,4) and (16,8). The detailed results can be found in vrba_adam/RP/ExampleRun/validation_predictions.csv.
 
-- #### Seed
+### **Key Findings:**
+
+Comparable Accuracy: Evolutionary algorithms demonstrated the ability to achieve test accuracies comparable to traditional backpropagation methods.
+
+Scalability Limitations: For larger neural network architectures, evolutionary algorithms proved to be significantly slower in training time when compared to their gradient-based counterparts.
+# Experiment configuration
+In our project we can add various arguments to weight search or backpropagations.
+In the next section we explain and show the arguments on examples.
+
+- ### Seed
 ### Example:
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --seed 42
 ````
 ##### Description: Sets a seed to random number generation.
 
-- #### hidden_layers
+- ### hidden_layers
 ### Example:
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
 ````
 ##### Description:  Allows you to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12
 
-- #### run_all
+- ### run_all
 ### Example:
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --run_all all
@@ -92,7 +98,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --run_all all
 - all -> Runs the experiment on all possible dimension reduction and datasets.
 
 
-- #### save_evo
+- ### save_evo
 ### Example:
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
@@ -100,7 +106,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --save_evo Example
 ````
 ##### Description: OutputDirectory for evolutionary search results
 
-- #### generations
+- ### generations
 ### Example:
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --generations
@@ -108,7 +114,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --generations
 ````
 ##### Description: number of generations in evolution search
 
-- #### metrics
+- ### metrics
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- metrics
@@ -132,7 +138,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --iterations 50
 ````
 ##### Description: Number of iterations in gradient_search
 
-- #### save_back
+- ### save_back
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_back
@@ -141,7 +147,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_back
 ##### Description: OutputDirectory for gradient search results
 
 
-- #### dimension reduction
+- ### dimension reduction
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py --dims raw
@@ -152,7 +158,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --dims raw
 - lda -> LDA method is used to reduce input dimensions.
 - pca -> PCA method is used to reduce input dimensions.
 
-- #### Select dataset
+- ### Select dataset
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
@@ -168,7 +174,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
 - promapczext -> selects extended promapcz dataset
 - amazonext -> selects promapmulti_amazon_ext dataset
 
-- #### output 
+- ### output 
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
@@ -178,7 +184,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
  Output directory where test set accuracy of all models is saved (It is saved in validation_predictions.csv file).
 
 
-- #### analyze
+- ### analyze
 ### Example:
 ````
 python $HOME/vrba_adam/RP/evolution_vs_backprop.py --analyze
