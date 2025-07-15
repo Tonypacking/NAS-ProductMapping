@@ -18,7 +18,7 @@ This project is split into 4 folders 2 python scripts: analyze_predictions and e
 2. **vrba_adam/RP/WeightSearch_Backpropagation**: Contains modules related to neural network training via backpropagation.
 3. **vrba_adam/RP/WeightSearch_Evolution**: Contains modules related to neural network weight optimization via evolutionary algorithms.
 4. **vrba_adam/Data** This folder contains all datasets required for product mapping.
-5. **vrba_adam//RP/analyze_predictions.py** This script analyzes the predictions of trained models.
+5. **vrba_adam/RP/analyze_predictions.py** This script analyzes the predictions of trained models.
 6. **vrba_adam/RP/evolution_vs_backprop.py** This script is the main entry point for this experiment.
 
 ## Requirements
@@ -83,7 +83,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --seed 42
 ````
 python vrba_adam/RP/evolution_vs_backprop.py --hidden_layers "12 12, 10 10, 12"
 ````
-##### Description:  Allows you to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12
+##### Description:  Allows user to define the hidden layer architectures to be searched during the execution. The script will evaluate each configuration and select the best-performing one. This example will setup 3 NN where the first one has two hidden layers of neuron sizes(12,12) , the second has two hidden layers of neuron sizes (10,10) and the last one has just one hidden layer 12
 
 - ### run_all
 ### Example:
@@ -117,7 +117,7 @@ python vrba_adam/RP/evolution_vs_backprop.py --generations
 - ### metrics
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- metrics
+python /vrba_adam/RP/evolution_vs_backprop.py -- metrics
 
 ````
 ##### Description: A metric which is used to determine fitness of an individual. Allows 7 possible values.
@@ -133,7 +133,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- metrics
 - #### Iterations
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --iterations 50
+python /vrba_adam/RP/evolution_vs_backprop.py --iterations 50
 
 ````
 ##### Description: Number of iterations in gradient_search
@@ -141,7 +141,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --iterations 50
 - ### save_back
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_back
+python /vrba_adam/RP/evolution_vs_backprop.py --save_back
 
 ````
 ##### Description: OutputDirectory for gradient search results
@@ -150,7 +150,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --save_back
 - ### dimension reduction
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --dims raw
+python /vrba_adam/RP/evolution_vs_backprop.py --dims raw
 
 ````
 ##### Description: Dimension reduction method
@@ -161,7 +161,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --dims raw
 - ### Select dataset
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
+python /vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
 
 ````
 ##### Description: Select a dataset on which the experiment is run. 
@@ -177,7 +177,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py -- dataset promapcz
 - ### output 
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
+python /vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
 
 ````
 ##### Description:
@@ -187,7 +187,7 @@ python $HOME/vrba_adam/RP/evolution_vs_backprop.py --output OutputDirectory
 - ### analyze
 ### Example:
 ````
-python $HOME/vrba_adam/RP/evolution_vs_backprop.py --analyze
+python /vrba_adam/RP/evolution_vs_backprop.py --analyze
 
 ````
 ##### Description:
