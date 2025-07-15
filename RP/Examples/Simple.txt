@@ -1,1 +1,0 @@
-python3 evolution_vs_backprop.py  --o ExampleRun --iter 15 --run_all all --gen 15 --sb ExampleRun/Backpropagation --se ExampleRun/Evolution
