@@ -15,13 +15,14 @@ For training neural network weights, we will use the Adam optimizer from scikit-
 
 
 ## Project Organisation
-This project is split into 4 folders 2 python scripts: analyze_predictions and evolution_vs_backprop.py and finally this README.md file.
+This project is split into 4 folders 2 python scripts: analyze_predictions and evolution_vs_backprop.py, SemestralProjectSummary.pdf and finally this README.md file.
 1. **vrba_adam/RP/ExampleRun**: This folder contains experiment reuslts.
 2. **vrba_adam/RP/WeightSearch_Backpropagation**: Contains modules related to neural network training via backpropagation.
 3. **vrba_adam/RP/WeightSearch_Evolution**: Contains modules related to neural network weight optimization via evolutionary algorithms.
 4. **vrba_adam/Data** This folder contains all datasets required for product mapping.
 5. **vrba_adam/RP/analyze_predictions.py** This script analyzes the predictions of trained models.
 6. **vrba_adam/RP/evolution_vs_backprop.py** This script is the main entry point for this experiment.
+7. **vrba_adam/RP/SemestralProjectSummary.pdf** THis PDF file contains in detail results of our experiments.
 
 ## Requirements
 Requires packages located at  vrba_adam/RP/requirements.txt. 
